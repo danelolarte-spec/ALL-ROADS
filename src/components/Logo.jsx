@@ -2,7 +2,8 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 
 // Raster brand logo. Drop your file at /public/logo.png to override.
-export const LOGO_IMAGE = '/logo.png'
+// Resolved via Vite base so it works both in dev and under GitHub Pages subpath.
+export const LOGO_IMAGE = `${import.meta.env.BASE_URL}logo.png`.replace(/\/{2,}/g, '/')
 
 export default function Logo({ color = '#F56F00', className = '', size = 'md' }) {
   const sizes = {
