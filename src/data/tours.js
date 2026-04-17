@@ -15,7 +15,7 @@ const BASE = import.meta.env.BASE_URL
 const asset = (p) => `${BASE}${p}`.replace(/\/{2,}/g, '/')
 
 // Drop your own photo at /public/hero.jpg to override
-export const HERO_IMAGE = asset('hero.jpg')
+export const HERO_IMAGE = asset('hero.jpeg')
 export const HERO_FALLBACK =
   'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=2400&auto=format&fit=crop'
 
@@ -64,14 +64,14 @@ export const tours = [
     accent: 'pumpkin',
     bg: 'greenwhite',
     // Drop your files at /public/guatape-1.jpg ... /public/guatape-4.jpg to use your own photos
-    image: asset('guatape-1.jpg'),
+    image: asset('guatape-1.jpeg'),
     imageFallback:
       'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1600&auto=format&fit=crop',
     images: [
-      asset('guatape-1.jpg'),
-      asset('guatape-2.jpg'),
-      asset('guatape-3.jpg'),
-      asset('guatape-4.jpg'),
+      asset('guatape-1.jpeg'),
+      asset('guatape-2.jpeg'),
+      asset('guatape-3.jpeg'),
+      asset('guatape-4.jpeg'),
     ],
     imagesFallback: [
       'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1200&auto=format&fit=crop',
