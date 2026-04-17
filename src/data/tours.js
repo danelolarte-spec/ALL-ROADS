@@ -10,6 +10,11 @@ export const BRAND = {
   city: 'Medellín, Colombia',
 }
 
+// Drop your own photo at /public/hero.jpg to override
+export const HERO_IMAGE = '/hero.jpg'
+export const HERO_FALLBACK =
+  'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=2400&auto=format&fit=crop'
+
 export const tours = [
   {
     id: 'city-comuna',
@@ -20,7 +25,12 @@ export const tours = [
     accent: 'forest',
     bg: 'golden',
     image:
-      'https://images.unsplash.com/photo-1598467367947-2bbbf39c9b34?q=80&w=1600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?q=80&w=1600&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1626254604711-3afb59f5e94e?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=1200&auto=format&fit=crop',
+    ],
     description:
       'Un recorrido cultural que contextualiza la historia reciente de Medellín a través de espacios de memoria. Contrastamos identidad antioqueña con vistas panorámicas de la Medellín actual, conociendo símbolos de transformación urbana, arte y resiliencia comunitaria, como solo All Roads sabe hacerlo.',
     places: [
@@ -51,6 +61,11 @@ export const tours = [
     bg: 'greenwhite',
     image:
       'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1600&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1593689693495-3d6c1e88d97a?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1612968066095-39abc8088d5e?q=80&w=1200&auto=format&fit=crop',
+    ],
     description:
       'Vive Guatapé a través de sus paisajes, cultura e identidad única. Déjate sorprender por la Piedra del Peñol, las vistas del embalse y la armonía entre naturaleza y agua. Una experiencia auténtica, con calma y el estilo All Roads.',
     places: [
@@ -81,6 +96,11 @@ export const tours = [
     bg: 'lightstep',
     image:
       'https://images.unsplash.com/photo-1559525839-d9acfd5ed2d1?q=80&w=1600&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1559525839-d9acfd5ed2d1?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1611174340043-c7c1f48dac79?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1578775887804-699de7086ff9?q=80&w=1200&auto=format&fit=crop',
+    ],
     description:
       'Conecta con la esencia del café colombiano en una experiencia rural a pocos minutos de Medellín. Recorre paisajes de montaña en San Sebastián de Palmitas, descubre el origen del café especial y vive una experiencia auténtica cercana al estilo All Roads.',
     places: ['Finca del café en San Sebastián de Palmitas'],
@@ -108,6 +128,11 @@ export const tours = [
     bg: 'greenwhite',
     image:
       'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=1600&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1611347518147-0cd49b1ea0c4?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1626254604711-3afb59f5e94e?q=80&w=1200&auto=format&fit=crop',
+    ],
     description:
       'Conoce la transformación y evolución de Medellín a través de un recorrido que conecta su historia, memoria y espíritu resiliente. Descubre espacios urbanos que reflejan el cambio social, el arte y la innovación que hoy definen a la ciudad.',
     places: [
@@ -137,6 +162,11 @@ export const tours = [
     bg: 'lightstep',
     image:
       'https://images.unsplash.com/photo-1580130601339-b86dff5abcd1?q=80&w=1600&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1580130601339-b86dff5abcd1?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1633707436706-15030df60bf3?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1584820462523-39e0a30e4e5e?q=80&w=1200&auto=format&fit=crop',
+    ],
     description:
       'Sumérgete en la historia y la transformación de la Comuna 13. Recorre un territorio donde el arte urbano, los grafitis, las escaleras eléctricas y los miradores reflejan identidad, resiliencia y expresión cultural, al estilo All Roads.',
     places: ['Graffitour (Comuna 13)', 'Show de baile', 'Museo del Café'],
@@ -157,24 +187,32 @@ export const experienciasAdicionales = [
     season: 'Semana Santa',
     emoji: '⛪',
     color: 'sky',
+    image:
+      'https://images.unsplash.com/photo-1508009603885-50cf7c579365?q=80&w=1200&auto=format&fit=crop',
   },
   {
     name: 'Tour Feria de Flores',
     season: 'Feria de Flores',
     emoji: '🌻',
     color: 'golden',
+    image:
+      'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?q=80&w=1200&auto=format&fit=crop',
   },
   {
     name: 'Tour Finca Silletera',
     season: 'Feria de Flores',
     emoji: '💐',
     color: 'forest',
+    image:
+      'https://images.unsplash.com/photo-1521336575822-6da63fb45455?q=80&w=1200&auto=format&fit=crop',
   },
   {
     name: 'Tour Tradición Navideña',
     season: 'Época decembrina',
     emoji: '🎄',
     color: 'pumpkin',
+    image:
+      'https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1200&auto=format&fit=crop',
   },
 ]
 
@@ -216,15 +254,56 @@ export const testimonials = [
   },
 ]
 
+// Galería ampliada con más fotos de Medellín
 export const galleryImages = [
-  'https://images.unsplash.com/photo-1580130601339-b86dff5abcd1?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1559525839-d9acfd5ed2d1?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1598467367947-2bbbf39c9b34?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1508009603885-50cf7c579365?q=80&w=1200&auto=format&fit=crop',
+  {
+    src: 'https://images.unsplash.com/photo-1592836724492-0fcfb68f2b9d?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Centro de Medellín',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1580130601339-b86dff5abcd1?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Comuna 13',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Guatapé',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1559525839-d9acfd5ed2d1?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Tour Cafetero',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Medellín de noche',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1626254604711-3afb59f5e94e?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Pueblito Paisa',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1611347518147-0cd49b1ea0c4?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Skyline paisa',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1632757061935-66ea8ca3c4ce?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Metro de Medellín',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1593689693495-3d6c1e88d97a?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Zócalos de Guatapé',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Montañas antioqueñas',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1633707436706-15030df60bf3?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Arte urbano Comuna 13',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1611174340043-c7c1f48dac79?q=80&w=1200&auto=format&fit=crop',
+    caption: 'Café colombiano',
+  },
 ]
 
 export const mantras = [

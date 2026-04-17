@@ -20,8 +20,8 @@ export default function Gallery() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 auto-rows-[180px] md:auto-rows-[220px]">
-          {galleryImages.map((src, i) => {
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 auto-rows-[160px] md:auto-rows-[200px]">
+          {galleryImages.map((img, i) => {
             const spans = [
               'col-span-2 row-span-2',
               'col-span-1 row-span-1',
@@ -30,7 +30,11 @@ export default function Gallery() {
               'col-span-1 row-span-1',
               'col-span-1 row-span-1',
               'col-span-2 row-span-1',
+              'col-span-1 row-span-2',
+              'col-span-1 row-span-1',
               'col-span-2 row-span-1',
+              'col-span-1 row-span-1',
+              'col-span-1 row-span-1',
             ]
             return (
               <motion.div
@@ -38,20 +42,20 @@ export default function Gallery() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: i * 0.06 }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
                 whileHover={{ scale: 1.03 }}
                 className={`group relative overflow-hidden rounded-2xl shadow-lg ${spans[i % spans.length]}`}
               >
                 <img
-                  src={src}
-                  alt={`Galería All Roads ${i + 1}`}
+                  src={img.src}
+                  alt={img.caption || `Galería All Roads ${i + 1}`}
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-pumpkin/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-pumpkin/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                  <span className="inline-block px-2 py-1 bg-white/90 text-pumpkin text-[10px] font-bold rounded-full">
-                    ☺ Medallo
+                  <span className="inline-block px-2.5 py-1 bg-white/95 text-pumpkin text-[11px] font-bold rounded-full shadow">
+                    ☺ {img.caption || 'Medallo'}
                   </span>
                 </div>
               </motion.div>

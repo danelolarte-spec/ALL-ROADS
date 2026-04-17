@@ -29,13 +29,17 @@ export default function Tours() {
       id="tours"
       className="relative bg-neutral-900 text-white py-24 md:py-32 overflow-hidden"
     >
-      {/* Decorative top divider */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-golden curve-top -translate-y-px" />
+      {/* Decorative pattern */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-10 left-10 w-32 h-32 border-4 border-golden rounded-full animate-blob" />
+        <div className="absolute bottom-20 right-10 w-48 h-48 border-4 border-pumpkin rounded-full" />
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-forest rounded-full blur-2xl" />
+      </div>
 
       <div className="relative max-w-7xl mx-auto px-5 md:px-8">
         <div className="text-center max-w-3xl mx-auto">
           <span className="inline-block px-3 py-1 bg-pumpkin text-white font-bold text-xs tracking-widest rounded-full">
-            NUESTROS TOURS
+            NUESTROS TOURS · LO QUE TENEMOS PARA TI
           </span>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}

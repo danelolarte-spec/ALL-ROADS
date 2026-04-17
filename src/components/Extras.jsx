@@ -56,13 +56,26 @@ export default function Extras() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
                 whileHover={{ rotate: 0, scale: 1.05, y: -6 }}
-                className={`${colorMap[e.color]} ${textMap[e.color]} p-6 rounded-3xl shadow-xl`}
+                className={`relative overflow-hidden ${colorMap[e.color]} ${textMap[e.color]} rounded-3xl shadow-xl`}
               >
-                <div className="text-4xl md:text-5xl mb-3 animate-float">{e.emoji}</div>
-                <h3 className="font-display text-xl md:text-2xl leading-tight">{e.name}</h3>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold opacity-90 bg-black/10 px-2 py-1 rounded-full">
-                  <Calendar size={12} />
-                  {e.season}
+                {e.image && (
+                  <div className="relative h-28 md:h-32 overflow-hidden">
+                    <img
+                      src={e.image}
+                      alt={e.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover opacity-80"
+                    />
+                    <div className={`absolute inset-0 ${colorMap[e.color]} mix-blend-multiply opacity-50`} />
+                  </div>
+                )}
+                <div className="p-5">
+                  <div className="text-3xl md:text-4xl mb-2 animate-float">{e.emoji}</div>
+                  <h3 className="font-display text-lg md:text-xl leading-tight">{e.name}</h3>
+                  <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold opacity-90 bg-black/15 px-2 py-1 rounded-full">
+                    <Calendar size={12} />
+                    {e.season}
+                  </div>
                 </div>
               </motion.div>
             ))}
