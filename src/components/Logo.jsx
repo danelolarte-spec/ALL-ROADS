@@ -1,13 +1,32 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
+
+// Raster brand logo. Drop your file at /public/logo.png to override.
+export const LOGO_IMAGE = '/logo.png'
 
 export default function Logo({ color = '#F56F00', className = '', size = 'md' }) {
   const sizes = {
-    sm: { text: 'text-xl', thumb: 28 },
-    md: { text: 'text-3xl', thumb: 40 },
-    lg: { text: 'text-5xl md:text-6xl', thumb: 64 },
-    xl: { text: 'text-6xl md:text-8xl', thumb: 88 },
+    sm: { text: 'text-xl', thumb: 28, img: 'h-9 md:h-10' },
+    md: { text: 'text-3xl', thumb: 40, img: 'h-12 md:h-14' },
+    lg: { text: 'text-5xl md:text-6xl', thumb: 64, img: 'h-20 md:h-24' },
+    xl: { text: 'text-6xl md:text-8xl', thumb: 88, img: 'h-28 md:h-36' },
   }
   const s = sizes[size]
+  const [hasImage, setHasImage] = useState(true)
+
+  if (hasImage) {
+    return (
+      <div className={`inline-flex items-center ${className}`}>
+        <img
+          src={LOGO_IMAGE}
+          alt="All Roads"
+          className={`${s.img} w-auto object-contain drop-shadow`}
+          onError={() => setHasImage(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className={`inline-flex items-center gap-2 ${className}`} style={{ color }}>
       <span className={`font-display ${s.text} leading-none`}>ALL</span>

@@ -59,12 +59,21 @@ export const tours = [
     price: 230000,
     accent: 'pumpkin',
     bg: 'greenwhite',
-    image:
+    // Drop your files at /public/guatape-1.jpg ... /public/guatape-4.jpg to use your own photos
+    image: '/guatape-1.jpg',
+    imageFallback:
       'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1600&auto=format&fit=crop',
     images: [
+      '/guatape-1.jpg',
+      '/guatape-2.jpg',
+      '/guatape-3.jpg',
+      '/guatape-4.jpg',
+    ],
+    imagesFallback: [
       'https://images.unsplash.com/photo-1599992181788-d56dfe0f8087?q=80&w=1200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1593689693495-3d6c1e88d97a?q=80&w=1200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1612968066095-39abc8088d5e?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=1200&auto=format&fit=crop',
     ],
     description:
       'Vive Guatapé a través de sus paisajes, cultura e identidad única. Déjate sorprender por la Piedra del Peñol, las vistas del embalse y la armonía entre naturaleza y agua. Una experiencia auténtica, con calma y el estilo All Roads.',

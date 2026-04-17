@@ -77,6 +77,11 @@ export default function Tours() {
                     className="w-full h-full object-cover"
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.8 }}
+                    onError={(e) => {
+                      if (t.imageFallback && e.currentTarget.src !== t.imageFallback) {
+                        e.currentTarget.src = t.imageFallback
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                   <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white text-xs font-bold ${ac.bg}`}>
@@ -174,7 +179,16 @@ function TourModal({ tour, onClose }) {
           <X size={20} />
         </button>
         <div className="relative h-64 md:h-80">
-          <img src={tour.image} alt={tour.name} className="w-full h-full object-cover" />
+          <img
+            src={tour.image}
+            alt={tour.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              if (tour.imageFallback && e.currentTarget.src !== tour.imageFallback) {
+                e.currentTarget.src = tour.imageFallback
+              }
+            }}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6">
             <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-white text-xs font-bold ${ac.bg}`}>
