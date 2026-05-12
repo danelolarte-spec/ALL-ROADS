@@ -66,6 +66,8 @@ all-roads/
 
 ## Quick start (desarrollo local)
 
+> **¿Windows?** Hay guía dedicada paso a paso con scripts automáticos: **[WINDOWS.md](./WINDOWS.md)**
+
 Requiere **Docker** (para Postgres) y **Node 18+**.
 
 ```bash
