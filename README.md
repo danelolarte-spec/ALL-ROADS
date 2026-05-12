@@ -126,11 +126,10 @@ Cada cambio sensible registra una entrada en `AuditLog` (quién, qué, cuándo).
 
 ## Deploy a producción
 
-Guía paso a paso (Vercel + Railway, ~15 min): **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+Dos opciones documentadas:
 
-- Frontend → Vercel (Hobby gratis)
-- Backend NestJS + PostgreSQL → Railway
-- Costo de arranque: ~$5/mes
+- **🆓 100% gratis (Vercel + Render + Neon)** → **[DEPLOY-FREE.md](./DEPLOY-FREE.md)** *(sin tarjeta de crédito)*
+- **🚀 Recomendado para uso real (Vercel + Railway)** → **[DEPLOYMENT.md](./DEPLOYMENT.md)** *(~$5/mes)*
 
 ---
 
