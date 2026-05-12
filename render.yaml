@@ -1,0 +1,26 @@
+# Render Blueprint para ALL ROADS API
+# Free tier — sin tarjeta de crédito
+# Documentación: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: all-roads-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/docs
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # se setea manualmente con la URL de Neon
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: PORT
+        value: 4000
+      - key: CORS_ORIGIN
+        sync: false  # se setea con la URL de Vercel
+      - key: GOOGLE_MAPS_API_KEY
+        value: ""
