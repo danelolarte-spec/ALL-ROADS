@@ -14,7 +14,7 @@ Plataforma SaaS modular de **gestión operativa y logística** para transporte e
 | UI              | Componentes propios estilo Shadcn/UI                |
 | Backend         | NestJS 10 + TypeScript                              |
 | ORM             | Prisma                                              |
-| Base de datos   | SQLite (dev) / PostgreSQL (prod)                    |
+| Base de datos   | PostgreSQL (docker-compose local + Railway/Supabase en prod) |
 | Autenticación   | JWT + Passport + Roles & permisos                   |
 | Mapas           | Google Maps API (placeholder, listo para conectar)  |
 | Excel           | SheetJS (XLSX)                                      |
@@ -64,19 +64,26 @@ all-roads/
 
 ---
 
-## Quick start
+## Quick start (desarrollo local)
+
+Requiere **Docker** (para Postgres) y **Node 18+**.
 
 ```bash
-# 1. Instalar dependencias
+# 1. Levantar PostgreSQL local
+docker compose up -d
+
+# 2. Instalar dependencias
 npm install
 
-# 2. Crear DB, ejecutar migraciones y seed
+# 3. Crear schema + cargar datos demo
 npm run db:migrate
 npm run db:seed
 
-# 3. Levantar API + Web en paralelo
+# 4. Levantar API + Web en paralelo
 npm run dev
 ```
+
+> ¿No quieres usar Docker? Apunta `DATABASE_URL` en `apps/api/.env` a cualquier Postgres que tengas (Supabase, ElephantSQL, etc.).
 
 - API: http://localhost:4000/api
 - Web: http://localhost:3000
@@ -115,18 +122,13 @@ Cada cambio sensible registra una entrada en `AuditLog` (quién, qué, cuándo).
 
 ---
 
-## Pasar a PostgreSQL
+## Deploy a producción
 
-En `apps/api/prisma/schema.prisma` cambiar:
+Guía paso a paso (Vercel + Railway, ~15 min): **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
-```prisma
-datasource db {
-  provider = "postgresql"  // antes: "sqlite"
-  url      = env("DATABASE_URL")
-}
-```
-
-y definir `DATABASE_URL` en `.env`. Luego `npm run db:migrate`.
+- Frontend → Vercel (Hobby gratis)
+- Backend NestJS + PostgreSQL → Railway
+- Costo de arranque: ~$5/mes
 
 ---
 

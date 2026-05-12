@@ -1,13 +1,14 @@
 // ALL ROADS — Prisma schema
 // Cubre los 10 módulos de la plataforma.
-// Provider: sqlite (dev). Cambia a "postgresql" en producción.
+// Provider: PostgreSQL (recomendado para Railway/Render/Supabase).
+// Para desarrollo local, ver docker-compose.yml.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
