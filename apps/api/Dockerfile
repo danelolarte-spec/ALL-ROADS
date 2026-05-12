@@ -1,33 +1,28 @@
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-COPY apps/api/package.json apps/api/
-COPY apps/web/package.json apps/web/
-RUN npm install --workspaces --include-workspace-root --omit=optional
+# Dockerfile simple y robusto para Render Free / Railway / cualquier PaaS
+# Build context = raíz del monorepo
 
-FROM node:20-alpine AS builder
+FROM node:20-alpine
+
+# Prisma necesita openssl en Alpine
+RUN apk add --no-cache openssl libc6-compat bash
+
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+
+# Copiar todo el monorepo (respeta .dockerignore)
 COPY . .
+
+# Instalar dependencias del monorepo completo
+RUN npm install --no-audit --no-fund
+
+# Generar Prisma Client y compilar NestJS
 WORKDIR /app/apps/api
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY package.json ./
+# Hacer ejecutable el script de arranque
+RUN chmod +x scripts/start.sh
 
-WORKDIR /app/apps/api
+ENV NODE_ENV=production
 EXPOSE 4000
-# En Railway, "Start Command" puede ser:
-#   npx prisma migrate deploy && node dist/main
-# o si prefieres push (no requiere migrations commiteadas):
-#   npx prisma db push --accept-data-loss && node dist/main
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/main"]
+
+CMD ["./scripts/start.sh"]
