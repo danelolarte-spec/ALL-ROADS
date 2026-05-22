@@ -99,11 +99,11 @@ const Storage = {
                 baba_excelencia: 6500
             },
             empresa: {
-                nombre: 'CacaoFlow Arauquita',
+                nombre: 'Smart Cacao Arauquita',
                 nit: '900.123.456-7',
                 direccion: 'Corregimiento El Troncal, Arauquita - Arauca',
                 telefono: '+57 320 555 0123',
-                email: 'contacto@cacaoflow.co'
+                email: 'contacto@smartcacao.co'
             },
             puntoSalida: {
                 nombre: 'Centro de Acopio El Troncal',

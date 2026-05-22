@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <g transform="translate(100, 100)">
+    <!-- Hoja verde superior -->
+    <path d="M -45 -75 C -85 -65, -95 -20, -55 10 C -25 -10, -10 -50, -45 -75 Z"
+          fill="none" stroke="#4d9d5d" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M -45 -75 C -40 -40, -45 -10, -55 10"
+          fill="none" stroke="#4d9d5d" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Cacao marrón -->
+    <path d="M 25 -55 C 90 -40, 100 60, 50 110 C 5 65, 0 -15, 25 -55 Z"
+          fill="none" stroke="#7a4f2a" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M 25 -55 C 35 5, 40 60, 50 110"
+          fill="none" stroke="#7a4f2a" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Semillas -->
+    <ellipse cx="50" cy="-10" rx="5" ry="8" fill="#7a4f2a"/>
+    <ellipse cx="55" cy="13"  rx="5" ry="8" fill="#7a4f2a"/>
+    <ellipse cx="58" cy="37"  rx="5" ry="8" fill="#7a4f2a"/>
+    <ellipse cx="58" cy="61"  rx="5" ry="8" fill="#7a4f2a"/>
+    <ellipse cx="52" cy="83"  rx="5" ry="8" fill="#7a4f2a"/>
+
+    <!-- Gráfico de barras -->
+    <rect x="-50" y="15" width="12" height="30" fill="#4d9d5d" rx="2"/>
+    <rect x="-32" y="-5" width="12" height="50" fill="#4d9d5d" rx="2"/>
+    <rect x="-14" y="25" width="12" height="20" fill="#4d9d5d" rx="2"/>
+  </g>
+</svg>

@@ -118,7 +118,7 @@ const ConfigModule = {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `CacaoFlow_Backup_${Helpers.today()}.json`;
+        a.download = `SmartCacao_Backup_${Helpers.today()}.json`;
         a.click();
         URL.revokeObjectURL(url);
         UI.toast('Backup descargado', 'success');

@@ -1,5 +1,5 @@
 /* ================================================================
-   app.js — Orquestador principal de CacaoFlow
+   app.js — Orquestador principal de Smart Cacao
 ================================================================ */
 
 const App = {
@@ -23,7 +23,7 @@ const App = {
         Storage.seedIfEmpty();
 
         // Cargar tema guardado
-        const theme = localStorage.getItem('cacaoflow_theme') || 'light';
+        const theme = localStorage.getItem('smartcacao_theme') || 'light';
         if (theme === 'dark') document.body.classList.add('dark');
         this._refreshThemeIcon();
 
@@ -52,7 +52,7 @@ const App = {
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark');
             const isDark = document.body.classList.contains('dark');
-            localStorage.setItem('cacaoflow_theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('smartcacao_theme', isDark ? 'dark' : 'light');
             this._refreshThemeIcon();
         });
 
@@ -86,7 +86,7 @@ const App = {
         // Ocultar loader
         setTimeout(() => {
             UI.hideLoader();
-            UI.toast('Bienvenido a CacaoFlow', 'success', 'Sistema cargado');
+            UI.toast('Bienvenido a Smart Cacao', 'success', 'Sistema cargado');
         }, 800);
     },
 

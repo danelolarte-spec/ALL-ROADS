@@ -36,6 +36,13 @@ const DashboardModule = {
         });
 
         container.innerHTML = `
+            <div class="welcome-banner">
+                <img src="assets/logo.svg" alt="Smart Cacao" class="welcome-logo">
+                <div class="welcome-text">
+                    <h2>Bienvenido a <span class="brand-smart">smart</span> <span class="brand-cacao">Cacao</span></h2>
+                    <p>Plataforma integral de gestión de recolección de cacao · Arauquita, Arauca</p>
+                </div>
+            </div>
             ${UI.pageHeader('Dashboard', 'Indicadores ejecutivos de operación', `<span class="badge badge-info"><i class="fa-regular fa-calendar"></i> ${Helpers.formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}</span>`)}
 
             <div class="kpi-grid">

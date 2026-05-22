@@ -27,11 +27,15 @@ const PDFGen = {
         doc.setFillColor(...this._palette.cacao);
         doc.rect(0, 0, w, 22, 'F');
 
-        // "Logo" textual
+        // "Logo" textual estilo Smart Cacao
+        doc.setTextColor(174, 216, 179); // verde claro
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.text('smart', 12, 11);
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
-        doc.text('🌱 CACAOFLOW', 12, 13);
+        doc.text('CACAO', 27, 13);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('Sistema de Gestión de Cacao', 12, 18);
@@ -39,7 +43,7 @@ const PDFGen = {
         // Datos empresa a la derecha
         doc.setFontSize(8);
         const rightX = w - 12;
-        doc.text(empresa.nombre || 'CacaoFlow Arauquita', rightX, 8, { align: 'right' });
+        doc.text(empresa.nombre || 'Smart Cacao Arauquita', rightX, 8, { align: 'right' });
         doc.text('NIT: ' + (empresa.nit || ''), rightX, 12, { align: 'right' });
         doc.text(empresa.direccion || '', rightX, 16, { align: 'right' });
         doc.text(empresa.telefono || '', rightX, 20, { align: 'right' });
@@ -71,7 +75,7 @@ const PDFGen = {
 
         doc.setFontSize(8);
         doc.setTextColor(...this._palette.gris);
-        doc.text('Documento generado por CacaoFlow • ' + Helpers.formatDateTime(Helpers.now()), 12, h - 10);
+        doc.text('Documento generado por Smart Cacao • ' + Helpers.formatDateTime(Helpers.now()), 12, h - 10);
         const pages = doc.internal.getNumberOfPages();
         doc.text(`Página ${doc.internal.getCurrentPageInfo().pageNumber} de ${pages}`, w - 12, h - 10, { align: 'right' });
     },
@@ -266,7 +270,7 @@ const PDFGen = {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('Recibí conforme - Productor', 50, fy + 5, { align: 'center' });
-        doc.text('Comprador - ' + (empresa.nombre || 'CacaoFlow'), 150, fy + 5, { align: 'center' });
+        doc.text('Comprador - ' + (empresa.nombre || 'Smart Cacao'), 150, fy + 5, { align: 'center' });
 
         this._addFooters(doc);
         doc.save(`OrdenCompra_${oc.numero}.pdf`);

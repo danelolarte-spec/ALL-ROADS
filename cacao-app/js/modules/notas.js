@@ -319,7 +319,7 @@ const NotasModule = {
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Notas');
-        XLSX.writeFile(wb, 'Notas_CacaoFlow.xlsx');
+        XLSX.writeFile(wb, 'Notas_SmartCacao.xlsx');
         UI.toast('Excel descargado', 'success');
     }
 };

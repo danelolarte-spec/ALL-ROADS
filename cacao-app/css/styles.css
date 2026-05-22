@@ -1,5 +1,5 @@
 /* ================================================================
-   CacaoFlow - Sistema de Gestión de Recolección de Cacao
+   Smart Cacao - Sistema de Gestión de Recolección de Cacao
    Paleta: Verde cacao, Marrón tierra, Beige natural, Blanco
 ================================================================ */
 
@@ -125,16 +125,27 @@ input, select, textarea { font-family: inherit; font-size: inherit; color: inher
 }
 .loader-overlay.hidden { opacity: 0; pointer-events: none; }
 .loader-content { text-align: center; color: var(--cacao-100); }
+.loader-logo {
+    width: 220px;
+    height: auto;
+    margin: 0 auto 24px;
+    display: block;
+    background: white;
+    padding: 18px 24px;
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.4);
+    animation: logoIn .6s cubic-bezier(.16,1,.3,1);
+}
+@keyframes logoIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 .loader-spinner {
-    width: 64px; height: 64px;
-    border: 4px solid rgba(255,255,255,0.15);
+    width: 48px; height: 48px;
+    border: 3px solid rgba(255,255,255,0.15);
     border-top-color: var(--cacao-300);
     border-radius: 50%;
-    margin: 0 auto 24px;
+    margin: 0 auto 16px;
     animation: spin 1s linear infinite;
 }
-.loader-title { font-size: 28px; font-weight: 700; letter-spacing: .5px; margin-bottom: 8px; }
-.loader-text  { font-size: 14px; color: var(--cacao-200); }
+.loader-text  { font-size: 14px; color: var(--cacao-200); letter-spacing: .5px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ================================================================
@@ -166,6 +177,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; color: inher
     justify-content: space-between;
 }
 .logo { display: flex; align-items: center; gap: 12px; }
+.logo-img {
+    width: 46px;
+    height: 46px;
+    background: white;
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    flex-shrink: 0;
+}
 .logo-icon {
     width: 42px; height: 42px;
     border-radius: 12px;
@@ -174,7 +194,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; color: inher
     color: white; font-size: 20px;
     box-shadow: 0 4px 12px rgba(77,157,93,0.4);
 }
-.logo-text h1 { font-size: 17px; font-weight: 700; color: white; }
+.logo-text h1 { font-size: 17px; font-weight: 700; color: white; letter-spacing: .3px; }
+.logo-text h1 .smart { color: var(--green-400); font-weight: 400; }
 .logo-text span { font-size: 11px; color: var(--cacao-300); letter-spacing: .5px; }
 
 .sidebar-toggle {
@@ -344,6 +365,53 @@ input, select, textarea { font-family: inherit; font-size: inherit; color: inher
     animation: fadeIn .35s ease;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ============ WELCOME BANNER ============ */
+.welcome-banner {
+    background: linear-gradient(135deg, var(--beige-200), var(--green-100));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 22px 28px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -40%; right: -10%;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(122,79,42,.08), transparent 70%);
+    pointer-events: none;
+}
+.welcome-logo {
+    width: 110px;
+    height: auto;
+    flex-shrink: 0;
+}
+.welcome-text h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: .3px;
+}
+.welcome-text .brand-smart { color: var(--green-600); font-weight: 300; }
+.welcome-text .brand-cacao { color: var(--cacao-700); font-weight: 800; }
+.welcome-text p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+body.dark .welcome-banner { background: linear-gradient(135deg, #2a2218, #1a2a1d); }
+
+@media (max-width: 720px) {
+    .welcome-banner { flex-direction: column; text-align: center; padding: 18px; }
+    .welcome-logo { width: 90px; }
+}
 
 /* ============ PAGE HEADER ============ */
 .page-header {

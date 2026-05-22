@@ -1,4 +1,4 @@
-# 🌱 CacaoFlow — Sistema de Gestión de Recolección de Cacao
+# 🌱 Smart Cacao — Sistema de Gestión de Recolección de Cacao
 
 Aplicación web **100% local** para administrar fincas productoras, órdenes de servicio, planificación de rutas, vehículos, notas de recolección, prefacturas y consolidado histórico de cacao.
 
@@ -29,7 +29,7 @@ Y abrir `http://localhost:8080`.
 ## 📁 Estructura del proyecto
 
 ```
-cacao-app/
+smart-cacao/
 ├── index.html                  # Página principal (SPA)
 ├── css/
 │   └── styles.css              # Estilos completos (paleta cacao/verde/beige)

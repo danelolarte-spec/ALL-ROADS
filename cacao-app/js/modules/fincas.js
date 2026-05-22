@@ -490,7 +490,7 @@ const FincasModule = {
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Fincas');
-        XLSX.writeFile(wb, 'Fincas_CacaoFlow.xlsx');
+        XLSX.writeFile(wb, 'Fincas_SmartCacao.xlsx');
         UI.toast('Excel descargado', 'success');
     }
 };

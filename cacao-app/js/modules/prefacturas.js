@@ -118,7 +118,7 @@ const PrefacturasModule = {
                 <div class="invoice">
                     <div class="invoice-header">
                         <div>
-                            <h1>${Helpers.escapeHtml(empresa.nombre || 'CacaoFlow')}</h1>
+                            <h1>${Helpers.escapeHtml(empresa.nombre || 'Smart Cacao')}</h1>
                             <div class="invoice-num">NIT: ${Helpers.escapeHtml(empresa.nit || '')}</div>
                             <div class="invoice-num">${Helpers.escapeHtml(empresa.direccion || '')}</div>
                         </div>
@@ -188,7 +188,7 @@ const PrefacturasModule = {
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'OrdenesCompra');
-        XLSX.writeFile(wb, 'OrdenesCompra_CacaoFlow.xlsx');
+        XLSX.writeFile(wb, 'OrdenesCompra_SmartCacao.xlsx');
         UI.toast('Excel descargado', 'success');
     }
 };

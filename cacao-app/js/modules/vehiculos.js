@@ -167,7 +167,7 @@ const VehiculosModule = {
         })));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Vehiculos');
-        XLSX.writeFile(wb, 'Vehiculos_CacaoFlow.xlsx');
+        XLSX.writeFile(wb, 'Vehiculos_SmartCacao.xlsx');
         UI.toast('Excel descargado', 'success');
     }
 };
