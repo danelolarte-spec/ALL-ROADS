@@ -1,0 +1,295 @@
+/* ================================================================
+   modules/notas.js — Notas de recolección (heredan de orden)
+================================================================ */
+
+const NotasModule = {
+
+    state: { search: '' },
+
+    nextNumero() {
+        const list = Storage.list(Storage.KEYS.notas);
+        const year = new Date().getFullYear();
+        const max = list.map(n => parseInt((n.numero || '').split('-').pop()) || 0).reduce((a, b) => Math.max(a, b), 0);
+        return `NR-${year}-${String(max + 1).padStart(4, '0')}`;
+    },
+
+    render() {
+        const container = document.getElementById('viewContainer');
+        container.innerHTML = `
+            ${UI.pageHeader('Notas de Recolección', 'Documentos independientes vinculados a órdenes', `
+                <button class="btn btn-outline" onclick="NotasModule.exportExcel()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            `)}
+            <div id="notasView"></div>
+        `;
+        this.renderView();
+    },
+
+    renderView() {
+        const list = Storage.list(Storage.KEYS.notas)
+            .filter(n => !this.state.search ||
+                n.numero.toLowerCase().includes(this.state.search.toLowerCase()) ||
+                (n.responsable || '').toLowerCase().includes(this.state.search.toLowerCase()));
+        const sorted = Helpers.sortBy(list, 'fechaReal', false);
+        const fincas = Object.fromEntries(Storage.list(Storage.KEYS.fincas).map(f => [f.id, f]));
+        const ordenes = Object.fromEntries(Storage.list(Storage.KEYS.ordenes).map(o => [o.id, o]));
+
+        const rows = sorted.map(n => {
+            const f = fincas[n.fincaId];
+            const o = ordenes[n.ordenId];
+            const diff = n.pesoReal - (n.cantidadProgramada || o?.cantidad || 0);
+            return `
+                <tr>
+                    <td><strong>${Helpers.escapeHtml(n.numero)}</strong></td>
+                    <td>${Helpers.formatDate(n.fechaReal)}</td>
+                    <td>${o ? `<small>${Helpers.escapeHtml(o.numero)}</small>` : '-'}</td>
+                    <td>${f ? Helpers.escapeHtml(f.nombre) : '-'}</td>
+                    <td><span class="badge badge-gray">${n.tipoCacao}</span></td>
+                    <td><strong>${Helpers.formatNumber(n.pesoReal)}</strong> kg</td>
+                    <td><small class="${diff >= 0 ? 'text-success' : 'text-danger'}">${diff >= 0 ? '+' : ''}${Helpers.formatNumber(diff)}</small></td>
+                    <td>${this._calBadge(n.calidadReal)}</td>
+                    <td>${Helpers.escapeHtml(n.responsable || '-')}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button onclick="NotasModule.viewDetail('${n.id}')"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="NotasModule.openEdit('${n.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="PDFGen.notaRecoleccion(Storage.findById(Storage.KEYS.notas,'${n.id}'))"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button class="danger" onclick="NotasModule.deleteNota('${n.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('notasView').innerHTML = `
+            <div class="table-wrap">
+                <div class="table-toolbar">
+                    <div class="search-box" style="width:260px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Buscar nota o responsable..." value="${Helpers.escapeHtml(this.state.search)}"
+                               oninput="NotasModule.state.search=this.value; NotasModule.renderView();">
+                    </div>
+                    <span class="text-muted" style="margin-left:auto;">${sorted.length} notas</span>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Número</th><th>Fecha</th><th>Orden</th><th>Finca</th><th>Tipo</th><th>Peso real</th><th>Δ vs prog.</th><th>Calidad</th><th>Responsable</th><th style="width:160px;">Acciones</th></tr></thead>
+                    <tbody>${rows || `<tr><td colspan="10">${UI.emptyState('file-pen','Sin notas','Las notas se generan desde una orden cuando llegas a la finca.')}</td></tr>`}</tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    _calBadge(c) {
+        const map = { 'Estándar': 'badge-estandar', 'Premium': 'badge-premium', 'Excelencia': 'badge-excelencia' };
+        return `<span class="badge ${map[c] || 'badge-gray'}">${c}</span>`;
+    },
+
+    // ===== Crear desde una orden =====
+    crearDesdeOrden(ordenId) {
+        const orden = Storage.findById(Storage.KEYS.ordenes, ordenId);
+        if (!orden) return;
+        const existing = Storage.list(Storage.KEYS.notas).find(n => n.ordenId === ordenId);
+        if (existing) {
+            UI.toast('Esta orden ya tiene una nota de recolección', 'warning');
+            this.openEdit(existing.id);
+            return;
+        }
+        this._openForm({
+            ordenId: orden.id,
+            fincaId: orden.fincaId,
+            tipoCacao: orden.tipoCacao,
+            cantidadProgramada: orden.cantidad,
+            pesoReal: orden.cantidad,
+            calidadReal: orden.calidad,
+            clones: orden.clones || [],
+            fechaReal: Helpers.today(),
+            responsable: '',
+            observaciones: orden.observaciones || ''
+        }, true);
+    },
+
+    openEdit(id) {
+        const n = Storage.findById(Storage.KEYS.notas, id);
+        if (!n) return;
+        this._openForm(n, false);
+    },
+
+    _openForm(nota, isNew) {
+        const finca = Storage.findById(Storage.KEYS.fincas, nota.fincaId);
+        const orden = Storage.findById(Storage.KEYS.ordenes, nota.ordenId);
+        UI.openModal({
+            title: isNew ? 'Generar nota de recolección' : `Editar ${nota.numero}`,
+            size: 'lg',
+            body: `
+                <form id="notaForm">
+                    <input type="hidden" name="id" value="${nota.id || ''}">
+                    <input type="hidden" name="ordenId" value="${nota.ordenId}">
+                    <input type="hidden" name="fincaId" value="${nota.fincaId}">
+                    <input type="hidden" name="cantidadProgramada" value="${nota.cantidadProgramada || orden?.cantidad || 0}">
+                    <input type="hidden" name="clones" value='${JSON.stringify(nota.clones || [])}'>
+
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Información heredada</strong><br>
+                            <small>Orden: ${orden?.numero || '-'} · Finca: ${finca?.nombre || '-'} (${finca?.propietario || '-'})</small><br>
+                            <small>Cantidad programada: <strong>${Helpers.formatKg(nota.cantidadProgramada || orden?.cantidad || 0)}</strong></small>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Número</label>
+                            <input type="text" name="numero" value="${nota.numero || this.nextNumero()}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha real <span class="req">*</span></label>
+                            <input type="date" name="fechaReal" required value="${nota.fechaReal}">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo cacao</label>
+                            <select name="tipoCacao">
+                                <option value="Seco" ${nota.tipoCacao === 'Seco' ? 'selected' : ''}>Seco</option>
+                                <option value="En baba" ${nota.tipoCacao === 'En baba' ? 'selected' : ''}>En baba</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Peso REAL recolectado (kg) <span class="req">*</span></label>
+                            <input type="number" step="0.1" name="pesoReal" required min="0" value="${nota.pesoReal || 0}">
+                        </div>
+                        <div class="form-group">
+                            <label>Calidad real <span class="req">*</span></label>
+                            <select name="calidadReal" required>
+                                ${['Estándar', 'Premium', 'Excelencia'].map(c => `<option ${nota.calidadReal === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Responsable</label>
+                            <input type="text" name="responsable" value="${Helpers.escapeHtml(nota.responsable || '')}" placeholder="Nombre del recolector">
+                        </div>
+                        <div class="form-group full">
+                            <label>Observaciones finales</label>
+                            <textarea name="observaciones">${Helpers.escapeHtml(nota.observaciones || '')}</textarea>
+                        </div>
+                    </div>
+                </form>
+            `,
+            footer: `
+                <button class="btn btn-ghost" onclick="UI.closeModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="NotasModule.save()"><i class="fa-solid fa-check"></i> ${isNew ? 'Crear nota' : 'Actualizar'}</button>
+            `
+        });
+    },
+
+    save() {
+        const data = UI.serializeForm(document.getElementById('notaForm'));
+        if (!Helpers.isNumber(data.pesoReal)) { UI.toast('Peso real inválido', 'error'); return; }
+        const clones = JSON.parse(data.clones || '[]');
+
+        const payload = {
+            numero: data.numero,
+            ordenId: data.ordenId,
+            fincaId: data.fincaId,
+            fechaReal: data.fechaReal,
+            tipoCacao: data.tipoCacao,
+            cantidadProgramada: parseFloat(data.cantidadProgramada),
+            pesoReal: parseFloat(data.pesoReal),
+            calidadReal: data.calidadReal,
+            clones,
+            responsable: data.responsable,
+            observaciones: data.observaciones
+        };
+
+        if (data.id) {
+            const prev = Storage.findById(Storage.KEYS.notas, data.id);
+            const historial = prev.historial || [];
+            const cambios = [];
+            if (prev.pesoReal !== payload.pesoReal) cambios.push(`Peso ${prev.pesoReal} → ${payload.pesoReal}`);
+            if (prev.calidadReal !== payload.calidadReal) cambios.push(`Calidad ${prev.calidadReal} → ${payload.calidadReal}`);
+            if (prev.fechaReal !== payload.fechaReal) cambios.push(`Fecha ${prev.fechaReal} → ${payload.fechaReal}`);
+            if (cambios.length) historial.push({ fecha: Helpers.now(), tipo: 'EDICIÓN', detalle: cambios.join(' · ') });
+            payload.historial = historial;
+            Storage.update(Storage.KEYS.notas, data.id, payload);
+            UI.toast('Nota actualizada', 'success');
+        } else {
+            payload.historial = [{ fecha: Helpers.now(), tipo: 'CREACIÓN', detalle: 'Nota creada desde orden ' + (Storage.findById(Storage.KEYS.ordenes, payload.ordenId)?.numero || '') }];
+            const created = Storage.add(Storage.KEYS.notas, payload);
+            // Marcar orden como Recolectada
+            Storage.update(Storage.KEYS.ordenes, payload.ordenId, { estado: 'Recolectada' });
+            // Generar prefactura automáticamente
+            PrefacturasModule.generarDesdeNota(created);
+            UI.toast('Nota creada · Prefactura generada', 'success');
+        }
+        UI.closeModal();
+        this.render();
+    },
+
+    viewDetail(id) {
+        const n = Storage.findById(Storage.KEYS.notas, id);
+        const f = Storage.findById(Storage.KEYS.fincas, n.fincaId);
+        const o = Storage.findById(Storage.KEYS.ordenes, n.ordenId);
+        const diff = n.pesoReal - (n.cantidadProgramada || 0);
+
+        UI.openModal({
+            title: `Nota ${n.numero}`,
+            size: 'lg',
+            body: `
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color:var(--cacao-700);">Datos de la nota</h4>
+                        <p><strong>Número:</strong> ${n.numero}</p>
+                        <p><strong>Fecha real:</strong> ${Helpers.formatDate(n.fechaReal)}</p>
+                        <p><strong>Tipo:</strong> ${n.tipoCacao}</p>
+                        <p><strong>Cantidad programada:</strong> ${Helpers.formatKg(n.cantidadProgramada)}</p>
+                        <p><strong>Peso real:</strong> ${Helpers.formatKg(n.pesoReal)} <small class="${diff >= 0 ? 'text-success' : 'text-danger'}">(${diff >= 0 ? '+' : ''}${diff} kg)</small></p>
+                        <p><strong>Calidad real:</strong> ${this._calBadge(n.calidadReal)}</p>
+                        <p><strong>Responsable:</strong> ${Helpers.escapeHtml(n.responsable || '-')}</p>
+                        <p><strong>Observaciones:</strong> ${Helpers.escapeHtml(n.observaciones || '-')}</p>
+                        <p><strong>Orden:</strong> ${o?.numero || '-'}</p>
+                        <p><strong>Finca:</strong> ${f?.nombre || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 style="color:var(--cacao-700); margin-bottom:12px;">Historial de cambios</h4>
+                        <div class="timeline">
+                            ${(n.historial || []).map(h => `
+                                <div class="timeline-item">
+                                    <strong>${h.tipo}</strong>
+                                    <span>${Helpers.formatDateTime(h.fecha)}</span>
+                                    <p>${Helpers.escapeHtml(h.detalle)}</p>
+                                </div>
+                            `).join('') || '<p class="text-muted">Sin historial</p>'}
+                        </div>
+                    </div>
+                </div>
+            `,
+            footer: `
+                <button class="btn btn-ghost" onclick="UI.closeModal()">Cerrar</button>
+                <button class="btn btn-outline" onclick="PDFGen.notaRecoleccion(Storage.findById(Storage.KEYS.notas,'${n.id}'))"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-primary" onclick="NotasModule.openEdit('${n.id}')"><i class="fa-solid fa-pen"></i> Editar</button>
+            `
+        });
+    },
+
+    async deleteNota(id) {
+        const ok = await UI.confirm({ title: '¿Eliminar nota?', message: 'También se eliminará la prefactura asociada.' });
+        if (!ok) return;
+        const pref = Storage.list(Storage.KEYS.prefacturas).find(p => p.notaId === id);
+        if (pref) Storage.remove_item(Storage.KEYS.prefacturas, pref.id);
+        Storage.remove_item(Storage.KEYS.notas, id);
+        UI.toast('Nota eliminada', 'success');
+        this.render();
+    },
+
+    exportExcel() {
+        const list = Storage.list(Storage.KEYS.notas);
+        const fincas = Object.fromEntries(Storage.list(Storage.KEYS.fincas).map(f => [f.id, f]));
+        const ws = XLSX.utils.json_to_sheet(list.map(n => ({
+            Número: n.numero, Fecha: n.fechaReal, Finca: fincas[n.fincaId]?.nombre,
+            Tipo: n.tipoCacao, Programado: n.cantidadProgramada, Real: n.pesoReal,
+            Calidad: n.calidadReal, Responsable: n.responsable, Observaciones: n.observaciones
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Notas');
+        XLSX.writeFile(wb, 'Notas_CacaoFlow.xlsx');
+        UI.toast('Excel descargado', 'success');
+    }
+};
