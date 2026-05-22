@@ -90,25 +90,35 @@ const NotasModule = {
     // ===== Crear desde una orden =====
     crearDesdeOrden(ordenId) {
         const orden = Storage.findById(Storage.KEYS.ordenes, ordenId);
-        if (!orden) return;
-        const existing = Storage.list(Storage.KEYS.notas).find(n => n.ordenId === ordenId);
-        if (existing) {
-            UI.toast('Esta orden ya tiene una nota de recolección', 'warning');
-            this.openEdit(existing.id);
+        if (!orden) {
+            UI.toast('Orden no encontrada', 'error');
             return;
         }
-        this._openForm({
-            ordenId: orden.id,
-            fincaId: orden.fincaId,
-            tipoCacao: orden.tipoCacao,
-            cantidadProgramada: orden.cantidad,
-            pesoReal: orden.cantidad,
-            calidadReal: orden.calidad,
-            clones: orden.clones || [],
-            fechaReal: Helpers.today(),
-            responsable: '',
-            observaciones: orden.observaciones || ''
-        }, true);
+        const existing = Storage.list(Storage.KEYS.notas).find(n => n.ordenId === ordenId);
+        if (existing) {
+            UI.toast(`Esta orden ya tiene la nota ${existing.numero}`, 'warning');
+            App.navigate('notas');
+            setTimeout(() => this.openEdit(existing.id), 150);
+            return;
+        }
+        // Primero navegar al módulo de Notas (actualiza sidebar/breadcrumb)
+        App.navigate('notas');
+        // Después abrir el formulario con los datos heredados de la orden
+        setTimeout(() => {
+            this._openForm({
+                ordenId: orden.id,
+                fincaId: orden.fincaId,
+                tipoCacao: orden.tipoCacao,
+                cantidadProgramada: orden.cantidad,
+                pesoReal: orden.cantidad,
+                calidadReal: orden.calidad,
+                clones: orden.clones || [],
+                fechaReal: Helpers.today(),
+                responsable: '',
+                observaciones: orden.observaciones || '',
+                _ordenNumero: orden.numero
+            }, true);
+        }, 150);
     },
 
     openEdit(id) {
@@ -120,8 +130,9 @@ const NotasModule = {
     _openForm(nota, isNew) {
         const finca = Storage.findById(Storage.KEYS.fincas, nota.fincaId);
         const orden = Storage.findById(Storage.KEYS.ordenes, nota.ordenId);
+        const titleNew = orden ? `Generar nota desde orden ${orden.numero}` : 'Generar nota de recolección';
         UI.openModal({
-            title: isNew ? 'Generar nota de recolección' : `Editar ${nota.numero}`,
+            title: isNew ? titleNew : `Editar ${nota.numero}`,
             size: 'lg',
             body: `
                 <form id="notaForm">
@@ -185,48 +196,60 @@ const NotasModule = {
     },
 
     save() {
-        const data = UI.serializeForm(document.getElementById('notaForm'));
-        if (!Helpers.isNumber(data.pesoReal)) { UI.toast('Peso real inválido', 'error'); return; }
-        const clones = JSON.parse(data.clones || '[]');
+        try {
+            const formEl = document.getElementById('notaForm');
+            if (!formEl) { UI.toast('Formulario no encontrado', 'error'); return; }
+            const data = UI.serializeForm(formEl);
+            if (!Helpers.isNumber(data.pesoReal)) { UI.toast('Peso real inválido', 'error'); return; }
+            if (!data.fechaReal) { UI.toast('Fecha real requerida', 'error'); return; }
+            if (!data.ordenId || !data.fincaId) { UI.toast('Datos heredados faltantes (orden/finca)', 'error'); return; }
 
-        const payload = {
-            numero: data.numero,
-            ordenId: data.ordenId,
-            fincaId: data.fincaId,
-            fechaReal: data.fechaReal,
-            tipoCacao: data.tipoCacao,
-            cantidadProgramada: parseFloat(data.cantidadProgramada),
-            pesoReal: parseFloat(data.pesoReal),
-            calidadReal: data.calidadReal,
-            clones,
-            responsable: data.responsable,
-            observaciones: data.observaciones
-        };
+            let clones = [];
+            try { clones = JSON.parse(data.clones || '[]'); } catch (e) { clones = []; }
 
-        if (data.id) {
-            const prev = Storage.findById(Storage.KEYS.notas, data.id);
-            const historial = prev.historial || [];
-            const cambios = [];
-            if (prev.pesoReal !== payload.pesoReal) cambios.push(`Peso ${prev.pesoReal} → ${payload.pesoReal}`);
-            if (prev.calidadReal !== payload.calidadReal) cambios.push(`Calidad ${prev.calidadReal} → ${payload.calidadReal}`);
-            if (prev.fechaReal !== payload.fechaReal) cambios.push(`Fecha ${prev.fechaReal} → ${payload.fechaReal}`);
-            if (cambios.length) historial.push({ fecha: Helpers.now(), tipo: 'EDICIÓN', detalle: cambios.join(' · ') });
-            payload.historial = historial;
-            Storage.update(Storage.KEYS.notas, data.id, payload);
-            UI.closeModal();
-            UI.toast('Nota actualizada', 'success');
-            this.render();
-        } else {
-            payload.historial = [{ fecha: Helpers.now(), tipo: 'CREACIÓN', detalle: 'Nota creada desde orden ' + (Storage.findById(Storage.KEYS.ordenes, payload.ordenId)?.numero || '') }];
-            const created = Storage.add(Storage.KEYS.notas, payload);
-            // Marcar orden como Recolectada
-            Storage.update(Storage.KEYS.ordenes, payload.ordenId, { estado: 'Recolectada' });
-            // Generar Orden de Compra automáticamente
-            const oc = PrefacturasModule.generarDesdeNota(created);
-            UI.closeModal();
-            UI.toast(`Nota ${created.numero} creada · Orden de Compra ${oc.numero} generada`, 'success');
-            // Navegar al módulo Notas para mostrar la nota creada
-            App.navigate('notas');
+            const payload = {
+                numero: data.numero,
+                ordenId: data.ordenId,
+                fincaId: data.fincaId,
+                fechaReal: data.fechaReal,
+                tipoCacao: data.tipoCacao,
+                cantidadProgramada: parseFloat(data.cantidadProgramada) || 0,
+                pesoReal: parseFloat(data.pesoReal),
+                calidadReal: data.calidadReal,
+                clones,
+                responsable: data.responsable || '',
+                observaciones: data.observaciones || ''
+            };
+
+            if (data.id) {
+                const prev = Storage.findById(Storage.KEYS.notas, data.id);
+                const historial = prev?.historial || [];
+                const cambios = [];
+                if (prev && prev.pesoReal !== payload.pesoReal) cambios.push(`Peso ${prev.pesoReal} → ${payload.pesoReal}`);
+                if (prev && prev.calidadReal !== payload.calidadReal) cambios.push(`Calidad ${prev.calidadReal} → ${payload.calidadReal}`);
+                if (prev && prev.fechaReal !== payload.fechaReal) cambios.push(`Fecha ${prev.fechaReal} → ${payload.fechaReal}`);
+                if (cambios.length) historial.push({ fecha: Helpers.now(), tipo: 'EDICIÓN', detalle: cambios.join(' · ') });
+                payload.historial = historial;
+                Storage.update(Storage.KEYS.notas, data.id, payload);
+                UI.closeModal();
+                UI.toast('Nota actualizada', 'success');
+                this.render();
+            } else {
+                const ordenRef = Storage.findById(Storage.KEYS.ordenes, payload.ordenId);
+                payload.historial = [{ fecha: Helpers.now(), tipo: 'CREACIÓN', detalle: 'Nota creada desde orden ' + (ordenRef?.numero || payload.ordenId) }];
+                const created = Storage.add(Storage.KEYS.notas, payload);
+                // Marcar orden como Recolectada
+                Storage.update(Storage.KEYS.ordenes, payload.ordenId, { estado: 'Recolectada' });
+                // Generar Orden de Compra automáticamente
+                const oc = PrefacturasModule.generarDesdeNota(created);
+                UI.closeModal();
+                UI.toast(`Nota ${created.numero} creada · OC ${oc.numero} generada`, 'success');
+                // Volver a renderizar la vista de Notas (ya estamos en ella)
+                this.render();
+            }
+        } catch (err) {
+            console.error('Error en NotasModule.save', err);
+            UI.toast('Error al guardar la nota: ' + (err.message || 'desconocido'), 'error');
         }
     },
 
