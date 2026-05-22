@@ -65,9 +65,9 @@ const DashboardModule = {
                     <div class="kpi-trend">${Helpers.formatKg(rutasHoy.reduce((a, b) => a + b.totalKg, 0))} programados</div>
                 </div>
                 <div class="kpi-card kpi-cacao">
-                    <div class="kpi-header"><span class="kpi-label">Valor prefacturado</span><div class="kpi-icon"><i class="fa-solid fa-coins"></i></div></div>
+                    <div class="kpi-header"><span class="kpi-label">Valor en órdenes de compra</span><div class="kpi-icon"><i class="fa-solid fa-coins"></i></div></div>
                     <div class="kpi-value" style="font-size:22px;">${Helpers.formatCOP(totalFacturado)}</div>
-                    <div class="kpi-trend">${prefacturas.length} prefacturas</div>
+                    <div class="kpi-trend">${prefacturas.length} órdenes de compra</div>
                 </div>
                 <div class="kpi-card ${alertasDocs.length ? 'kpi-danger' : ''}">
                     <div class="kpi-header"><span class="kpi-label">Alertas documentos</span><div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div></div>

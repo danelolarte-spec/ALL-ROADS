@@ -33,10 +33,12 @@ const NotasModule = {
         const fincas = Object.fromEntries(Storage.list(Storage.KEYS.fincas).map(f => [f.id, f]));
         const ordenes = Object.fromEntries(Storage.list(Storage.KEYS.ordenes).map(o => [o.id, o]));
 
+        const ocByNotaId = Object.fromEntries(Storage.list(Storage.KEYS.prefacturas).map(p => [p.notaId, p]));
         const rows = sorted.map(n => {
             const f = fincas[n.fincaId];
             const o = ordenes[n.ordenId];
             const diff = n.pesoReal - (n.cantidadProgramada || o?.cantidad || 0);
+            const oc = ocByNotaId[n.id];
             return `
                 <tr>
                     <td><strong>${Helpers.escapeHtml(n.numero)}</strong></td>
@@ -47,13 +49,15 @@ const NotasModule = {
                     <td><strong>${Helpers.formatNumber(n.pesoReal)}</strong> kg</td>
                     <td><small class="${diff >= 0 ? 'text-success' : 'text-danger'}">${diff >= 0 ? '+' : ''}${Helpers.formatNumber(diff)}</small></td>
                     <td>${this._calBadge(n.calidadReal)}</td>
+                    <td>${oc ? `<a href="#" onclick="App.navigate('prefacturas'); PrefacturasModule.viewDetail('${oc.id}'); return false;"><span class="badge badge-info">${oc.numero}</span></a>` : '<span class="text-muted">—</span>'}</td>
                     <td>${Helpers.escapeHtml(n.responsable || '-')}</td>
                     <td>
                         <div class="row-actions">
-                            <button onclick="NotasModule.viewDetail('${n.id}')"><i class="fa-solid fa-eye"></i></button>
-                            <button onclick="NotasModule.openEdit('${n.id}')"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="PDFGen.notaRecoleccion(Storage.findById(Storage.KEYS.notas,'${n.id}'))"><i class="fa-solid fa-file-pdf"></i></button>
-                            <button class="danger" onclick="NotasModule.deleteNota('${n.id}')"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="NotasModule.viewDetail('${n.id}')" title="Ver"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="NotasModule.openEdit('${n.id}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="PDFGen.notaRecoleccion(Storage.findById(Storage.KEYS.notas,'${n.id}'))" title="PDF nota"><i class="fa-solid fa-file-pdf"></i></button>
+                            ${oc ? `<button onclick="App.navigate('prefacturas'); PrefacturasModule.viewDetail('${oc.id}');" title="Ver Orden de Compra"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
+                            <button class="danger" onclick="NotasModule.deleteNota('${n.id}')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -71,8 +75,8 @@ const NotasModule = {
                     <span class="text-muted" style="margin-left:auto;">${sorted.length} notas</span>
                 </div>
                 <table class="data-table">
-                    <thead><tr><th>Número</th><th>Fecha</th><th>Orden</th><th>Finca</th><th>Tipo</th><th>Peso real</th><th>Δ vs prog.</th><th>Calidad</th><th>Responsable</th><th style="width:160px;">Acciones</th></tr></thead>
-                    <tbody>${rows || `<tr><td colspan="10">${UI.emptyState('file-pen','Sin notas','Las notas se generan desde una orden cuando llegas a la finca.')}</td></tr>`}</tbody>
+                    <thead><tr><th>Número</th><th>Fecha</th><th>Orden</th><th>Finca</th><th>Tipo</th><th>Peso real</th><th>Δ vs prog.</th><th>Calidad</th><th>Orden de Compra</th><th>Responsable</th><th style="width:180px;">Acciones</th></tr></thead>
+                    <tbody>${rows || `<tr><td colspan="11">${UI.emptyState('file-pen','Sin notas','Las notas se generan desde una orden cuando llegas a la finca.')}</td></tr>`}</tbody>
                 </table>
             </div>
         `;
@@ -209,18 +213,21 @@ const NotasModule = {
             if (cambios.length) historial.push({ fecha: Helpers.now(), tipo: 'EDICIÓN', detalle: cambios.join(' · ') });
             payload.historial = historial;
             Storage.update(Storage.KEYS.notas, data.id, payload);
+            UI.closeModal();
             UI.toast('Nota actualizada', 'success');
+            this.render();
         } else {
             payload.historial = [{ fecha: Helpers.now(), tipo: 'CREACIÓN', detalle: 'Nota creada desde orden ' + (Storage.findById(Storage.KEYS.ordenes, payload.ordenId)?.numero || '') }];
             const created = Storage.add(Storage.KEYS.notas, payload);
             // Marcar orden como Recolectada
             Storage.update(Storage.KEYS.ordenes, payload.ordenId, { estado: 'Recolectada' });
-            // Generar prefactura automáticamente
-            PrefacturasModule.generarDesdeNota(created);
-            UI.toast('Nota creada · Prefactura generada', 'success');
+            // Generar Orden de Compra automáticamente
+            const oc = PrefacturasModule.generarDesdeNota(created);
+            UI.closeModal();
+            UI.toast(`Nota ${created.numero} creada · Orden de Compra ${oc.numero} generada`, 'success');
+            // Navegar al módulo Notas para mostrar la nota creada
+            App.navigate('notas');
         }
-        UI.closeModal();
-        this.render();
     },
 
     viewDetail(id) {
@@ -270,7 +277,7 @@ const NotasModule = {
     },
 
     async deleteNota(id) {
-        const ok = await UI.confirm({ title: '¿Eliminar nota?', message: 'También se eliminará la prefactura asociada.' });
+        const ok = await UI.confirm({ title: '¿Eliminar nota?', message: 'También se eliminará la Orden de Compra asociada.' });
         if (!ok) return;
         const pref = Storage.list(Storage.KEYS.prefacturas).find(p => p.notaId === id);
         if (pref) Storage.remove_item(Storage.KEYS.prefacturas, pref.id);

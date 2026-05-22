@@ -227,12 +227,12 @@ const MockData = (() => {
     // Prefacturas asociadas
     const prefacturas = [
         {
-            id: 'pre_001', numero: 'PF-2026-0001', notaId: 'nota_001', fincaId: 'finca_003',
+            id: 'pre_001', numero: 'OC-2026-0001', notaId: 'nota_001', fincaId: 'finca_003',
             fecha: addDays(-7), tipoCacao: 'Seco', cantidad: 1085,
             calidad: 'Premium', precioKg: 11500, total: 1085 * 11500, estado: 'Generada'
         },
         {
-            id: 'pre_002', numero: 'PF-2026-0002', notaId: 'nota_002', fincaId: 'finca_007',
+            id: 'pre_002', numero: 'OC-2026-0002', notaId: 'nota_002', fincaId: 'finca_007',
             fecha: addDays(-15), tipoCacao: 'En baba', cantidad: 745,
             calidad: 'Estándar', precioKg: 4500, total: 745 * 4500, estado: 'Generada'
         }

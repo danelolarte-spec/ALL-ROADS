@@ -1,5 +1,5 @@
 /* ================================================================
-   modules/prefacturas.js — Prefacturas generadas desde notas
+   modules/prefacturas.js — Órdenes de Compra generadas desde notas
 ================================================================ */
 
 const PrefacturasModule = {
@@ -10,7 +10,7 @@ const PrefacturasModule = {
         const list = Storage.list(Storage.KEYS.prefacturas);
         const year = new Date().getFullYear();
         const max = list.map(p => parseInt((p.numero || '').split('-').pop()) || 0).reduce((a, b) => Math.max(a, b), 0);
-        return `PF-${year}-${String(max + 1).padStart(4, '0')}`;
+        return `OC-${year}-${String(max + 1).padStart(4, '0')}`;
     },
 
     // ===== Generación automática =====
@@ -19,11 +19,12 @@ const PrefacturasModule = {
         if (existing) return existing;
         const config = Storage.get(Storage.KEYS.config, {});
         const precios = config.precios || {};
-        const key = nota.tipoCacao.toLowerCase().includes('seco') ? 'seco' : 'baba';
-        const calKey = nota.calidadReal.toLowerCase().replace('á', 'a').replace('é', 'e');
+        const key = (nota.tipoCacao || '').toLowerCase().includes('seco') ? 'seco' : 'baba';
+        const calKey = (nota.calidadReal || 'Estándar').toLowerCase()
+            .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u');
         const priceKey = `${key}_${calKey}`;
         const precioKg = precios[priceKey] || 5000;
-        const pref = {
+        const oc = {
             numero: this.nextNumero(),
             notaId: nota.id,
             fincaId: nota.fincaId,
@@ -35,13 +36,13 @@ const PrefacturasModule = {
             total: nota.pesoReal * precioKg,
             estado: 'Generada'
         };
-        return Storage.add(Storage.KEYS.prefacturas, pref);
+        return Storage.add(Storage.KEYS.prefacturas, oc);
     },
 
     render() {
         const container = document.getElementById('viewContainer');
         container.innerHTML = `
-            ${UI.pageHeader('Prefacturas', 'Documentos generados automáticamente desde las notas de recolección', `
+            ${UI.pageHeader('Órdenes de Compra', 'Documentos generados automáticamente desde las notas de recolección', `
                 <button class="btn btn-outline" onclick="PrefacturasModule.exportExcel()"><i class="fa-solid fa-file-excel"></i> Excel</button>
             `)}
             <div id="prefView"></div>
@@ -70,7 +71,7 @@ const PrefacturasModule = {
                     <td>
                         <div class="row-actions">
                             <button onclick="PrefacturasModule.viewDetail('${p.id}')"><i class="fa-solid fa-eye"></i></button>
-                            <button onclick="PDFGen.prefactura(Storage.findById(Storage.KEYS.prefacturas,'${p.id}'))"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button onclick="PDFGen.ordenCompra(Storage.findById(Storage.KEYS.prefacturas,'${p.id}'))"><i class="fa-solid fa-file-pdf"></i></button>
                             <button onclick="window.print()"><i class="fa-solid fa-print"></i></button>
                             <button class="danger" onclick="PrefacturasModule.deletePref('${p.id}')"><i class="fa-solid fa-trash"></i></button>
                         </div>
@@ -82,23 +83,23 @@ const PrefacturasModule = {
         document.getElementById('prefView').innerHTML = `
             <div class="kpi-grid">
                 <div class="kpi-card kpi-cacao">
-                    <div class="kpi-header"><span class="kpi-label">Total prefacturado</span><div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div></div>
+                    <div class="kpi-header"><span class="kpi-label">Total a pagar</span><div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div></div>
                     <div class="kpi-value" style="font-size:22px;">${Helpers.formatCOP(totalGeneral)}</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-header"><span class="kpi-label">Total prefacturas</span><div class="kpi-icon"><i class="fa-solid fa-file-lines"></i></div></div>
+                    <div class="kpi-header"><span class="kpi-label">Total Órdenes de Compra</span><div class="kpi-icon"><i class="fa-solid fa-file-lines"></i></div></div>
                     <div class="kpi-value">${list.length}</div>
                 </div>
                 <div class="kpi-card kpi-info">
-                    <div class="kpi-header"><span class="kpi-label">Cacao facturado</span><div class="kpi-icon"><i class="fa-solid fa-weight-hanging"></i></div></div>
+                    <div class="kpi-header"><span class="kpi-label">Cacao comprado</span><div class="kpi-icon"><i class="fa-solid fa-weight-hanging"></i></div></div>
                     <div class="kpi-value">${Helpers.formatNumber(list.reduce((a, b) => a + b.cantidad, 0))}<span class="kpi-unit">kg</span></div>
                 </div>
             </div>
             <div class="table-wrap">
-                <div class="table-toolbar"><strong>Prefacturas registradas</strong><span class="text-muted" style="margin-left:auto;">${list.length}</span></div>
+                <div class="table-toolbar"><strong>Órdenes de Compra registradas</strong><span class="text-muted" style="margin-left:auto;">${list.length}</span></div>
                 <table class="data-table">
                     <thead><tr><th>Número</th><th>Fecha</th><th>Productor / Finca</th><th>Tipo</th><th>Calidad</th><th>Cantidad</th><th>Precio/kg</th><th>Total</th><th style="width:160px;">Acciones</th></tr></thead>
-                    <tbody>${rows || `<tr><td colspan="9">${UI.emptyState('file-invoice-dollar','Sin prefacturas','Las prefacturas se generan automáticamente cuando creas una nota de recolección.')}</td></tr>`}</tbody>
+                    <tbody>${rows || `<tr><td colspan="9">${UI.emptyState('file-invoice-dollar','Sin órdenes de compra','Las órdenes de compra se generan automáticamente cuando creas una nota de recolección.')}</td></tr>`}</tbody>
                 </table>
             </div>
         `;
@@ -111,7 +112,7 @@ const PrefacturasModule = {
         const empresa = config.empresa || {};
 
         UI.openModal({
-            title: `Prefactura ${p.numero}`,
+            title: `Orden de Compra ${p.numero}`,
             size: 'lg',
             body: `
                 <div class="invoice">
@@ -122,7 +123,7 @@ const PrefacturasModule = {
                             <div class="invoice-num">${Helpers.escapeHtml(empresa.direccion || '')}</div>
                         </div>
                         <div style="text-align:right;">
-                            <h1 style="color:var(--green-700);">PREFACTURA</h1>
+                            <h1 style="color:var(--green-700);">ORDEN DE COMPRA</h1>
                             <div class="invoice-num">${p.numero}</div>
                             <div class="invoice-num">Fecha: ${Helpers.formatDate(p.fecha)}</div>
                         </div>
@@ -146,7 +147,7 @@ const PrefacturasModule = {
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Recolección de cacao</td>
+                                <td>Compra de cacao</td>
                                 <td>${p.tipoCacao}</td>
                                 <td>${p.calidad}</td>
                                 <td style="text-align:right;">${Helpers.formatNumber(p.cantidad)} kg</td>
@@ -157,23 +158,23 @@ const PrefacturasModule = {
                     </table>
                     <div class="invoice-totals">
                         <div class="row"><span>Subtotal:</span><span>${Helpers.formatCOP(p.total)}</span></div>
-                        <div class="row total"><span>TOTAL:</span><span>${Helpers.formatCOP(p.total)}</span></div>
+                        <div class="row total"><span>TOTAL A PAGAR:</span><span>${Helpers.formatCOP(p.total)}</span></div>
                     </div>
                 </div>
             `,
             footer: `
                 <button class="btn btn-ghost" onclick="UI.closeModal()">Cerrar</button>
-                <button class="btn btn-primary" onclick="PDFGen.prefactura(Storage.findById(Storage.KEYS.prefacturas,'${p.id}'))"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+                <button class="btn btn-primary" onclick="PDFGen.ordenCompra(Storage.findById(Storage.KEYS.prefacturas,'${p.id}'))"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
                 <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
             `
         });
     },
 
     async deletePref(id) {
-        const ok = await UI.confirm({ title: '¿Eliminar prefactura?', message: 'La nota asociada no se eliminará.' });
+        const ok = await UI.confirm({ title: '¿Eliminar Orden de Compra?', message: 'La nota asociada no se eliminará.' });
         if (!ok) return;
         Storage.remove_item(Storage.KEYS.prefacturas, id);
-        UI.toast('Prefactura eliminada', 'success');
+        UI.toast('Orden de Compra eliminada', 'success');
         this.render();
     },
 
@@ -186,8 +187,8 @@ const PrefacturasModule = {
             Cantidad_kg: p.cantidad, PrecioKg: p.precioKg, Total: p.total
         })));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Prefacturas');
-        XLSX.writeFile(wb, 'Prefacturas_CacaoFlow.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, 'OrdenesCompra');
+        XLSX.writeFile(wb, 'OrdenesCompra_CacaoFlow.xlsx');
         UI.toast('Excel descargado', 'success');
     }
 };

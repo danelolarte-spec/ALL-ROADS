@@ -14,7 +14,7 @@ const App = {
         vehiculos:   { title: 'Vehículos', module: () => VehiculosModule },
         notas:       { title: 'Notas de Recolección', module: () => NotasModule },
         historico:   { title: 'Histórico por Finca', module: () => HistoricoModule },
-        prefacturas: { title: 'Prefacturas', module: () => PrefacturasModule },
+        prefacturas: { title: 'Órdenes de Compra', module: () => PrefacturasModule },
         config:      { title: 'Configuración', module: () => ConfigModule }
     },
 

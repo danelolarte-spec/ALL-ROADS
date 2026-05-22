@@ -199,14 +199,14 @@ const PDFGen = {
     },
 
     // ===========================================================
-    //  PREFACTURA
+    //  ORDEN DE COMPRA
     // ===========================================================
-    prefactura(prefactura) {
-        const finca = Storage.findById(Storage.KEYS.fincas, prefactura.fincaId) || {};
+    ordenCompra(oc) {
+        const finca = Storage.findById(Storage.KEYS.fincas, oc.fincaId) || {};
         const config = Storage.get(Storage.KEYS.config, {});
         const empresa = config.empresa || {};
         const doc = this._doc();
-        let y = this._header(doc, 'PREFACTURA', prefactura.numero);
+        let y = this._header(doc, 'ORDEN DE COMPRA', oc.numero);
 
         // Datos cabecera
         doc.setFontSize(10);
@@ -225,7 +225,7 @@ const PDFGen = {
         doc.text(`${finca.nombre || ''}`, 110, y + 10);
         doc.text(`Departamento: ${finca.departamento || ''}`, 110, y + 15);
         doc.text(`Municipio: ${finca.municipio || ''}`, 110, y + 20);
-        doc.text(`Fecha: ${Helpers.formatDate(prefactura.fecha)}`, 110, y + 25);
+        doc.text(`Fecha: ${Helpers.formatDate(oc.fecha)}`, 110, y + 25);
 
         // Tabla detalle
         doc.autoTable({
@@ -234,12 +234,12 @@ const PDFGen = {
             headStyles: { fillColor: this._palette.cacao, textColor: 255, fontStyle: 'bold' },
             head: [['Concepto', 'Tipo', 'Calidad', 'Cantidad (kg)', 'Precio/kg', 'Subtotal']],
             body: [[
-                'Recolección de cacao',
-                prefactura.tipoCacao,
-                prefactura.calidad,
-                Helpers.formatNumber(prefactura.cantidad),
-                Helpers.formatCOP(prefactura.precioKg),
-                Helpers.formatCOP(prefactura.total)
+                'Compra de cacao',
+                oc.tipoCacao,
+                oc.calidad,
+                Helpers.formatNumber(oc.cantidad),
+                Helpers.formatCOP(oc.precioKg),
+                Helpers.formatCOP(oc.total)
             ]]
         });
 
@@ -248,7 +248,7 @@ const PDFGen = {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text('Subtotal:', 130, ty);
-        doc.text(Helpers.formatCOP(prefactura.total), 195, ty, { align: 'right' });
+        doc.text(Helpers.formatCOP(oc.total), 195, ty, { align: 'right' });
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(13);
@@ -256,7 +256,7 @@ const PDFGen = {
         doc.rect(125, ty + 5, 75, 12, 'F');
         doc.setTextColor(255, 255, 255);
         doc.text('TOTAL A PAGAR', 130, ty + 13);
-        doc.text(Helpers.formatCOP(prefactura.total), 198, ty + 13, { align: 'right' });
+        doc.text(Helpers.formatCOP(oc.total), 198, ty + 13, { align: 'right' });
         doc.setTextColor(0, 0, 0);
 
         // Firmas
@@ -266,11 +266,14 @@ const PDFGen = {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('Recibí conforme - Productor', 50, fy + 5, { align: 'center' });
-        doc.text('Entregó - ' + (empresa.nombre || 'CacaoFlow'), 150, fy + 5, { align: 'center' });
+        doc.text('Comprador - ' + (empresa.nombre || 'CacaoFlow'), 150, fy + 5, { align: 'center' });
 
         this._addFooters(doc);
-        doc.save(`Prefactura_${prefactura.numero}.pdf`);
+        doc.save(`OrdenCompra_${oc.numero}.pdf`);
     },
+
+    // Alias para compatibilidad
+    prefactura(p) { return this.ordenCompra(p); },
 
     // ===========================================================
     //  HISTÓRICO POR FINCA
