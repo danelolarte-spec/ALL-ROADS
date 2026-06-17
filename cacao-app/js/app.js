@@ -15,6 +15,7 @@ const App = {
         notas:       { title: 'Notas de Recolección', module: () => NotasModule },
         historico:   { title: 'Histórico por Finca', module: () => HistoricoModule },
         prefacturas: { title: 'Órdenes de Compra', module: () => PrefacturasModule },
+        auditoria:   { title: 'Auditoría', module: () => AuditoriaModule },
         config:      { title: 'Configuración', module: () => ConfigModule }
     },
 
@@ -27,8 +28,10 @@ const App = {
         if (theme === 'dark') document.body.classList.add('dark');
         this._refreshThemeIcon();
 
-        // Fecha actual
+        // Fecha actual + usuario activo
         document.getElementById('currentDate').textContent = Helpers.formatDate(Helpers.today(), { weekday: 'long', day: 'numeric', month: 'long' });
+        const cfg = Storage.get(Storage.KEYS.config, {});
+        document.getElementById('topbarUser').textContent = cfg.currentUser || 'Administrador';
 
         // Listeners navegación
         document.querySelectorAll('.nav-item[data-view]').forEach(item => {

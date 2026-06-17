@@ -230,7 +230,13 @@ const NotasModule = {
                 if (prev && prev.fechaReal !== payload.fechaReal) cambios.push(`Fecha ${prev.fechaReal} → ${payload.fechaReal}`);
                 if (cambios.length) historial.push({ fecha: Helpers.now(), tipo: 'EDICIÓN', detalle: cambios.join(' · ') });
                 payload.historial = historial;
-                Storage.update(Storage.KEYS.notas, data.id, payload);
+                const updated = Storage.update(Storage.KEYS.notas, data.id, payload);
+                // AUDIT
+                const auditChanges = Audit.diff(prev, updated, ['fechaReal','tipoCacao','pesoReal','calidadReal','responsable','observaciones']);
+                if (auditChanges.length) {
+                    Audit.log({ entityType: 'nota', entityId: data.id, entityNumero: updated.numero,
+                        action: 'editar', details: `${auditChanges.length} campo(s) modificado(s)`, changes: auditChanges });
+                }
                 UI.closeModal();
                 UI.toast('Nota actualizada', 'success');
                 this.render();
@@ -240,11 +246,22 @@ const NotasModule = {
                 const created = Storage.add(Storage.KEYS.notas, payload);
                 // Marcar orden como Recolectada
                 Storage.update(Storage.KEYS.ordenes, payload.ordenId, { estado: 'Recolectada' });
+                // AUDIT: creación de nota
+                Audit.log({ entityType: 'nota', entityId: created.id, entityNumero: created.numero,
+                    action: 'crear',
+                    details: `Nota generada desde orden ${ordenRef?.numero || ''} · Peso real: ${created.pesoReal} kg · Calidad: ${created.calidadReal}`,
+                    changes: [
+                        { field: 'pesoReal', before: null, after: created.pesoReal },
+                        { field: 'calidadReal', before: null, after: created.calidadReal }
+                    ] });
+                // AUDIT: cambio de estado de la orden
+                Audit.log({ entityType: 'orden', entityId: payload.ordenId, entityNumero: ordenRef?.numero,
+                    action: 'estado', details: `Estado: ${ordenRef?.estado || '?'} → Recolectada`,
+                    changes: [{ field: 'estado', before: ordenRef?.estado, after: 'Recolectada' }] });
                 // Generar Orden de Compra automáticamente
                 const oc = PrefacturasModule.generarDesdeNota(created);
                 UI.closeModal();
                 UI.toast(`Nota ${created.numero} creada · OC ${oc.numero} generada`, 'success');
-                // Volver a renderizar la vista de Notas (ya estamos en ella)
                 this.render();
             }
         } catch (err) {
@@ -278,15 +295,9 @@ const NotasModule = {
                         <p><strong>Finca:</strong> ${f?.nombre || '-'}</p>
                     </div>
                     <div>
-                        <h4 style="color:var(--cacao-700); margin-bottom:12px;">Historial de cambios</h4>
-                        <div class="timeline">
-                            ${(n.historial || []).map(h => `
-                                <div class="timeline-item">
-                                    <strong>${h.tipo}</strong>
-                                    <span>${Helpers.formatDateTime(h.fecha)}</span>
-                                    <p>${Helpers.escapeHtml(h.detalle)}</p>
-                                </div>
-                            `).join('') || '<p class="text-muted">Sin historial</p>'}
+                        <h4 style="color:var(--cacao-700); margin-bottom:12px;"><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios (auditoría)</h4>
+                        <div style="max-height:300px; overflow-y:auto;">
+                            ${Audit.renderTimeline(Audit.list({ entityId: n.id }))}
                         </div>
                     </div>
                 </div>
@@ -302,9 +313,16 @@ const NotasModule = {
     async deleteNota(id) {
         const ok = await UI.confirm({ title: '¿Eliminar nota?', message: 'También se eliminará la Orden de Compra asociada.' });
         if (!ok) return;
+        const n = Storage.findById(Storage.KEYS.notas, id);
         const pref = Storage.list(Storage.KEYS.prefacturas).find(p => p.notaId === id);
-        if (pref) Storage.remove_item(Storage.KEYS.prefacturas, pref.id);
+        if (pref) {
+            Storage.remove_item(Storage.KEYS.prefacturas, pref.id);
+            Audit.log({ entityType: 'prefactura', entityId: pref.id, entityNumero: pref.numero,
+                action: 'eliminar', details: `Eliminada en cascada al borrar nota ${n?.numero}`, changes: [] });
+        }
         Storage.remove_item(Storage.KEYS.notas, id);
+        if (n) Audit.log({ entityType: 'nota', entityId: id, entityNumero: n.numero,
+            action: 'eliminar', details: 'Nota eliminada', changes: [] });
         UI.toast('Nota eliminada', 'success');
         this.render();
     },

@@ -1080,6 +1080,36 @@ body.dark .welcome-banner { background: linear-gradient(135deg, #2a2218, #1a2a1d
 .route-meta { font-size: 11px; color: var(--text-muted); text-align: right; }
 .route-meta strong { display: block; color: var(--text-primary); font-size: 13px; }
 
+/* ============ MULTI-VIAJES (Trips) ============ */
+.trip-block {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 14px;
+}
+.trip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+.trip-badge {
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    letter-spacing: .5px;
+}
+.trip-meta {
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
 .capacity-bar {
     height: 10px;
     background: var(--gray-200);

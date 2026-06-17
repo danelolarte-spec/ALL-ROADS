@@ -12,6 +12,7 @@ const Storage = {
         rutas: 'rutas',
         notas: 'notas',
         prefacturas: 'prefacturas',
+        auditLog: 'auditLog',
         config: 'config',
         meta: 'meta'
     },
@@ -89,6 +90,7 @@ const Storage = {
         this.set(this.KEYS.rutas, []);
         this.set(this.KEYS.notas, MockData.notas || []);
         this.set(this.KEYS.prefacturas, MockData.prefacturas || []);
+        this.set(this.KEYS.auditLog, MockData.auditLog || []);
         this.set(this.KEYS.config, {
             precios: {
                 seco_estandar: 9500,
@@ -109,7 +111,9 @@ const Storage = {
                 nombre: 'Centro de Acopio El Troncal',
                 lat: 7.0292,
                 lng: -71.4475
-            }
+            },
+            currentUser: 'Administrador',
+            usuarios: MockData.usuarios || ['Administrador']
         });
         this.set(this.KEYS.meta, { seeded: true, seedDate: Helpers.now() });
         return true;

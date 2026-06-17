@@ -36,7 +36,13 @@ const PrefacturasModule = {
             total: nota.pesoReal * precioKg,
             estado: 'Generada'
         };
-        return Storage.add(Storage.KEYS.prefacturas, oc);
+        const created = Storage.add(Storage.KEYS.prefacturas, oc);
+        // AUDIT
+        Audit.log({ entityType: 'prefactura', entityId: created.id, entityNumero: created.numero,
+            action: 'generar_oc',
+            details: `Orden de Compra generada desde nota ${nota.numero} · ${nota.pesoReal} kg × ${Helpers.formatCOP(precioKg)} = ${Helpers.formatCOP(created.total)}`,
+            changes: [] });
+        return created;
     },
 
     render() {
@@ -173,7 +179,10 @@ const PrefacturasModule = {
     async deletePref(id) {
         const ok = await UI.confirm({ title: '¿Eliminar Orden de Compra?', message: 'La nota asociada no se eliminará.' });
         if (!ok) return;
+        const p = Storage.findById(Storage.KEYS.prefacturas, id);
         Storage.remove_item(Storage.KEYS.prefacturas, id);
+        if (p) Audit.log({ entityType: 'prefactura', entityId: id, entityNumero: p.numero,
+            action: 'eliminar', details: 'Orden de Compra eliminada', changes: [] });
         UI.toast('Orden de Compra eliminada', 'success');
         this.render();
     },

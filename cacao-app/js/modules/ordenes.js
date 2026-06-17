@@ -376,10 +376,21 @@ const OrdenesModule = {
             confirmadaDiaAnterior: !!data.confirmadaDiaAnterior
         };
         if (data.id) {
-            Storage.update(Storage.KEYS.ordenes, data.id, payload);
+            const prev = Storage.findById(Storage.KEYS.ordenes, data.id);
+            const updated = Storage.update(Storage.KEYS.ordenes, data.id, payload);
+            const changes = Audit.diff(prev, updated, ['fecha','tipoCacao','cantidad','calidad','estado','clones','observaciones','confirmadaLlamada','confirmadaDiaAnterior']);
+            if (changes.length) {
+                Audit.log({ entityType: 'orden', entityId: updated.id, entityNumero: updated.numero,
+                    action: 'editar', details: `${changes.length} campo(s) modificado(s)`, changes });
+            }
             UI.toast('Orden actualizada', 'success');
         } else {
-            Storage.add(Storage.KEYS.ordenes, payload);
+            const created = Storage.add(Storage.KEYS.ordenes, payload);
+            const finca = Storage.findById(Storage.KEYS.fincas, created.fincaId);
+            Audit.log({ entityType: 'orden', entityId: created.id, entityNumero: created.numero,
+                action: 'crear',
+                details: `Orden creada para la finca ${finca?.nombre || '-'} · ${Helpers.formatKg(created.cantidad)} de ${created.tipoCacao} ${created.calidad}`,
+                changes: [] });
             UI.toast('Orden creada', 'success');
         }
         UI.closeModal();
@@ -389,8 +400,10 @@ const OrdenesModule = {
     viewDetail(id) {
         const o = Storage.findById(Storage.KEYS.ordenes, id);
         const f = Storage.findById(Storage.KEYS.fincas, o.fincaId);
+        const history = Audit.list({ entityId: id });
         UI.openModal({
             title: `Orden ${o.numero}`,
+            size: 'lg',
             body: `
                 <div class="grid-2">
                     <div>
@@ -415,6 +428,10 @@ const OrdenesModule = {
                         ` : '<p class="text-muted">Finca eliminada</p>'}
                     </div>
                 </div>
+                <h4 style="color:var(--cacao-700); margin-top:18px; margin-bottom:10px;"><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios (${history.length})</h4>
+                <div style="max-height:300px; overflow-y:auto;">
+                    ${Audit.renderTimeline(history)}
+                </div>
             `,
             footer: `
                 <button class="btn btn-ghost" onclick="UI.closeModal()">Cerrar</button>
@@ -430,6 +447,13 @@ const OrdenesModule = {
         const patch = { confirmadaLlamada: !o.confirmadaLlamada };
         if (patch.confirmadaLlamada && o.estado === 'Pendiente') patch.estado = 'Confirmada';
         Storage.update(Storage.KEYS.ordenes, id, patch);
+        // Audit
+        const changes = [{ field: 'confirmadaLlamada', before: o.confirmadaLlamada, after: patch.confirmadaLlamada }];
+        if (patch.estado) changes.push({ field: 'estado', before: o.estado, after: patch.estado });
+        Audit.log({ entityType: 'orden', entityId: id, entityNumero: o.numero,
+            action: 'confirmar',
+            details: patch.confirmadaLlamada ? 'Confirmación telefónica registrada' : 'Confirmación retirada',
+            changes });
         UI.toast(patch.confirmadaLlamada ? 'Orden confirmada' : 'Confirmación retirada', 'success');
         this.renderView();
     },
@@ -437,7 +461,10 @@ const OrdenesModule = {
     async deleteOrden(id) {
         const ok = await UI.confirm({ title: '¿Eliminar orden?', message: 'Esta acción no se puede deshacer.' });
         if (!ok) return;
+        const o = Storage.findById(Storage.KEYS.ordenes, id);
         Storage.remove_item(Storage.KEYS.ordenes, id);
+        if (o) Audit.log({ entityType: 'orden', entityId: id, entityNumero: o.numero,
+            action: 'eliminar', details: 'Orden eliminada', changes: [] });
         UI.toast('Orden eliminada', 'success');
         this.render();
     },

@@ -30,6 +30,25 @@ const ConfigModule = {
                 </div>
 
                 <div class="card">
+                    <div class="card-header"><div class="card-title">Usuario activo / Equipo</div></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Usuario actual (registrado en el log de auditoría)</label>
+                            <select id="currentUserSel" onchange="ConfigModule.saveCurrentUser(this.value)">
+                                ${(cfg.usuarios || ['Administrador']).map(u => `<option ${cfg.currentUser === u ? 'selected' : ''}>${Helpers.escapeHtml(u)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Equipo (un usuario por línea)</label>
+                            <textarea id="usuariosText" rows="6" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; font-family:inherit;">${(cfg.usuarios || []).join('\n')}</textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer" style="text-align:right;">
+                        <button class="btn btn-primary" onclick="ConfigModule.saveUsuarios()"><i class="fa-solid fa-check"></i> Guardar equipo</button>
+                    </div>
+                </div>
+
+                <div class="card">
                     <div class="card-header"><div class="card-title">Punto de salida</div></div>
                     <div class="card-body">
                         <form id="puntoForm">
@@ -93,6 +112,26 @@ const ConfigModule = {
         cfg.empresa = data;
         Storage.set(Storage.KEYS.config, cfg);
         UI.toast('Datos empresa guardados', 'success');
+    },
+
+    saveCurrentUser(name) {
+        const cfg = Storage.get(Storage.KEYS.config, {});
+        cfg.currentUser = name;
+        Storage.set(Storage.KEYS.config, cfg);
+        UI.toast(`Usuario activo: ${name}`, 'success');
+        const lbl = document.getElementById('topbarUser');
+        if (lbl) lbl.textContent = name;
+    },
+
+    saveUsuarios() {
+        const text = document.getElementById('usuariosText').value;
+        const usuarios = text.split('\n').map(s => s.trim()).filter(Boolean);
+        const cfg = Storage.get(Storage.KEYS.config, {});
+        cfg.usuarios = usuarios;
+        if (usuarios.length && !usuarios.includes(cfg.currentUser)) cfg.currentUser = usuarios[0];
+        Storage.set(Storage.KEYS.config, cfg);
+        UI.toast(`${usuarios.length} usuario(s) guardados`, 'success');
+        this.render();
     },
 
     savePunto() {

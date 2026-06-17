@@ -262,5 +262,152 @@ const MockData = (() => {
         }
     ];
 
-    return { clones, fincas, vehiculos, ordenes, notas, prefacturas };
+    // ===================== USUARIOS DEMO =====================
+    const usuarios = [
+        'Administrador',
+        'Juan Pérez (Coord. operaciones)',
+        'María Gómez (Recolector)',
+        'Pedro Silva (Recolector)',
+        'Carmen López (Asistente)'
+    ];
+
+    // ===================== HISTORIAL DE AUDITORÍA DEMO =====================
+    // Ejemplo completo del flujo de la orden OS-2026-0007 → nota_001 → OC-2026-0001
+    const ts = (daysAgo, h = 8, m = 0) => {
+        const d = new Date();
+        d.setDate(d.getDate() - daysAgo);
+        d.setHours(h, m, 0, 0);
+        return d.toISOString();
+    };
+
+    const auditLog = [
+        // --- Flujo de la orden OS-2026-0007 (Finca: Predio Los Mangos) ---
+        {
+            id: 'log_001', timestamp: ts(10, 9, 15),
+            user: 'Administrador',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'crear',
+            details: 'Orden creada para la finca Predio Los Mangos · 1100 kg de cacao Seco Premium',
+            changes: []
+        },
+        {
+            id: 'log_002', timestamp: ts(9, 14, 30),
+            user: 'Juan Pérez (Coord. operaciones)',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'editar',
+            details: 'Ajuste de cantidad por verificación con el productor',
+            changes: [
+                { field: 'cantidad', before: 1000, after: 1100 },
+                { field: 'observaciones', before: '', after: 'Productor confirma 1100 kg disponibles' }
+            ]
+        },
+        {
+            id: 'log_003', timestamp: ts(8, 17, 45),
+            user: 'Juan Pérez (Coord. operaciones)',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'confirmar',
+            details: 'Confirmación telefónica con el productor José Alberto Rivera',
+            changes: [{ field: 'confirmadaLlamada', before: false, after: true }]
+        },
+        {
+            id: 'log_004', timestamp: ts(8, 18, 10),
+            user: 'Juan Pérez (Coord. operaciones)',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'estado',
+            details: 'Estado: Pendiente → Confirmada',
+            changes: [{ field: 'estado', before: 'Pendiente', after: 'Confirmada' }]
+        },
+        {
+            id: 'log_005', timestamp: ts(7, 6, 0),
+            user: 'Administrador',
+            entityType: 'ruta', entityId: 'rt_demo_001', entityNumero: 'RT-2026-001',
+            action: 'crear',
+            details: 'Ruta planificada con vehículo BCD-892 · 3 fincas · 1820 kg estimados',
+            changes: []
+        },
+        {
+            id: 'log_006', timestamp: ts(7, 6, 5),
+            user: 'Administrador',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'asignar_ruta',
+            details: 'Asignada a ruta RT-2026-001 con vehículo BCD-892',
+            changes: [{ field: 'estado', before: 'Confirmada', after: 'En ruta' }]
+        },
+        {
+            id: 'log_007', timestamp: ts(7, 11, 20),
+            user: 'María Gómez (Recolector)',
+            entityType: 'nota', entityId: 'nota_001', entityNumero: 'NR-2026-0001',
+            action: 'crear',
+            details: 'Nota generada desde orden OS-2026-0007 al llegar a la finca',
+            changes: [
+                { field: 'pesoReal', before: null, after: 1085 },
+                { field: 'calidadReal', before: null, after: 'Premium' }
+            ]
+        },
+        {
+            id: 'log_008', timestamp: ts(7, 11, 22),
+            user: 'María Gómez (Recolector)',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'estado',
+            details: 'Estado: En ruta → Recolectada',
+            changes: [{ field: 'estado', before: 'En ruta', after: 'Recolectada' }]
+        },
+        {
+            id: 'log_009', timestamp: ts(7, 11, 23),
+            user: 'María Gómez (Recolector)',
+            entityType: 'prefactura', entityId: 'pre_001', entityNumero: 'OC-2026-0001',
+            action: 'generar_oc',
+            details: 'Orden de Compra generada automáticamente desde nota NR-2026-0001 · 1085 kg × $11.500 = $12.477.500',
+            changes: []
+        },
+        {
+            id: 'log_010', timestamp: ts(6, 9, 30),
+            user: 'Carmen López (Asistente)',
+            entityType: 'nota', entityId: 'nota_001', entityNumero: 'NR-2026-0001',
+            action: 'editar',
+            details: 'Corrección de observaciones tras verificación en bodega',
+            changes: [
+                { field: 'observaciones', before: '', after: 'Recolección sin novedades. Verificado en báscula central.' }
+            ]
+        },
+        {
+            id: 'log_011', timestamp: ts(5, 16, 0),
+            user: 'Administrador',
+            entityType: 'orden', entityId: 'ord_007', entityNumero: 'OS-2026-0007',
+            action: 'estado',
+            details: 'Estado: Recolectada → Finalizada (pago procesado)',
+            changes: [{ field: 'estado', before: 'Recolectada', after: 'Finalizada' }]
+        },
+
+        // --- Flujo de la orden OS-2026-0008 ---
+        {
+            id: 'log_012', timestamp: ts(20, 8, 0),
+            user: 'Administrador',
+            entityType: 'orden', entityId: 'ord_008', entityNumero: 'OS-2026-0008',
+            action: 'crear',
+            details: 'Orden creada para la finca El Paraíso del Cacao · 720 kg en baba',
+            changes: []
+        },
+        {
+            id: 'log_013', timestamp: ts(15, 10, 15),
+            user: 'Pedro Silva (Recolector)',
+            entityType: 'nota', entityId: 'nota_002', entityNumero: 'NR-2026-0002',
+            action: 'crear',
+            details: 'Nota generada · Peso REAL 745 kg (superior al programado en +25 kg)',
+            changes: [
+                { field: 'pesoReal', before: null, after: 745 },
+                { field: 'calidadReal', before: null, after: 'Estándar' }
+            ]
+        },
+        {
+            id: 'log_014', timestamp: ts(15, 10, 16),
+            user: 'Pedro Silva (Recolector)',
+            entityType: 'prefactura', entityId: 'pre_002', entityNumero: 'OC-2026-0002',
+            action: 'generar_oc',
+            details: 'Orden de Compra generada · 745 kg × $4.500 = $3.352.500',
+            changes: []
+        }
+    ];
+
+    return { clones, fincas, vehiculos, ordenes, notas, prefacturas, usuarios, auditLog };
 })();
