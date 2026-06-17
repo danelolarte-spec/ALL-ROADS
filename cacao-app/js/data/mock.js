@@ -25,6 +25,14 @@ const MockData = (() => {
             propietario: 'Carlos Mendoza Quintero', cedula: '17.658.234', telefono: '+57 320 432 5601',
             areaSembrada: 12.5, hectareasProductivas: 10.0,
             clones: ['CCN-51', 'TCS-01', 'ICS-95'],
+            poligonoTotal: [
+                [7.0431, -71.4335], [7.0431, -71.4307],
+                [7.0411, -71.4307], [7.0411, -71.4335]
+            ],
+            poligonoSembrado: [
+                [7.0425, -71.4329], [7.0425, -71.4313],
+                [7.0417, -71.4313], [7.0417, -71.4329]
+            ],
             createdAt: '2025-01-15T10:00:00Z'
         },
         {
@@ -35,6 +43,14 @@ const MockData = (() => {
             propietario: 'María Elena Rojas Pérez', cedula: '26.789.123', telefono: '+57 312 567 8932',
             areaSembrada: 8.0, hectareasProductivas: 7.2,
             clones: ['CCN-51', 'TCS-13'],
+            poligonoTotal: [
+                [7.0596, -71.4622], [7.0598, -71.4602],
+                [7.0580, -71.4600], [7.0578, -71.4620]
+            ],
+            poligonoSembrado: [
+                [7.0593, -71.4618], [7.0594, -71.4606],
+                [7.0583, -71.4605], [7.0582, -71.4617]
+            ],
             createdAt: '2025-02-20T10:00:00Z'
         },
         {
@@ -45,6 +61,14 @@ const MockData = (() => {
             propietario: 'José Alberto Rivera López', cedula: '15.234.876', telefono: '+57 314 678 1234',
             areaSembrada: 15.0, hectareasProductivas: 13.5,
             clones: ['CCN-51', 'ICS-95', 'PR-5'],
+            poligonoTotal: [
+                [7.0165, -71.4205], [7.0168, -71.4175],
+                [7.0140, -71.4172], [7.0138, -71.4203]
+            ],
+            poligonoSembrado: [
+                [7.0160, -71.4198], [7.0163, -71.4180],
+                [7.0145, -71.4179], [7.0143, -71.4197]
+            ],
             createdAt: '2024-11-08T10:00:00Z'
         },
         {

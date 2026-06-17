@@ -850,6 +850,114 @@ body.dark .welcome-banner { background: linear-gradient(135deg, #2a2218, #1a2a1d
 .tab:hover { color: var(--primary); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
+/* ============ EDITOR DE POLÍGONOS ============ */
+.poly-summary {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+}
+.poly-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+.poly-summary-item small { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
+.poly-summary > button { margin-left: auto; }
+
+.poly-editor { display: flex; flex-direction: column; gap: 0; }
+.poly-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-bottom: 6px;
+}
+.poly-mode-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.poly-mode-btn {
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg-body);
+    border: 2px solid var(--border-color);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.poly-mode-btn:hover { border-color: var(--primary); color: var(--primary); }
+.poly-mode-btn.active {
+    background: white;
+    border-color: var(--cacao-700);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.poly-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.poly-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.poly-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+}
+@media (max-width: 720px) {
+    .poly-grid { grid-template-columns: 1fr; }
+}
+.poly-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.poly-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.poly-stat {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+}
+.poly-stat-label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.poly-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Tooltips de puntos */
+.leaflet-tooltip.poly-tip {
+    background: white;
+    border: 2px solid var(--cacao-700);
+    color: var(--cacao-800);
+    font-weight: 700;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.2);
+}
+.leaflet-tooltip.poly-tip::before { display: none; }
+
 /* ============ MAPA ============ */
 .map-container {
     width: 100%;

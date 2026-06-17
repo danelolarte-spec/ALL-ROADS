@@ -167,6 +167,21 @@ const FincasModule = {
             .bindPopup(`<strong>${punto.nombre}</strong><br>Punto de salida`);
 
         fincas.forEach(f => {
+            // Polígono área total
+            if (f.poligonoTotal && f.poligonoTotal.length >= 3) {
+                L.polygon(f.poligonoTotal, {
+                    color: '#f59e0b', weight: 2, dashArray: '6,4',
+                    fillColor: '#fbbf24', fillOpacity: 0.08
+                }).addTo(map).bindTooltip(`${f.nombre} - Área total: ${Helpers.polygonAreaHa(f.poligonoTotal).toFixed(2)} ha`);
+            }
+            // Polígono área sembrada
+            if (f.poligonoSembrado && f.poligonoSembrado.length >= 3) {
+                L.polygon(f.poligonoSembrado, {
+                    color: '#3b7a48', weight: 2,
+                    fillColor: '#6bb377', fillOpacity: 0.30
+                }).addTo(map).bindTooltip(`${f.nombre} - Sembrado: ${Helpers.polygonAreaHa(f.poligonoSembrado).toFixed(2)} ha`);
+            }
+
             const icon = L.divIcon({
                 className: 'finca-marker',
                 html: '<div style="background:#3b7a48; color:white; width:28px; height:28px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,.3);"><i class="fa-solid fa-tree" style="transform:rotate(45deg); font-size:11px;"></i></div>',
@@ -179,6 +194,25 @@ const FincasModule = {
                 <small>${f.hectareasProductivas} ha productivas</small>
             `);
         });
+
+        // Leyenda del mapa
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function() {
+            const div = L.DomUtil.create('div', 'map-legend');
+            div.innerHTML = `
+                <div style="background:white; padding:8px 12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); font-size:11px;">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <span style="display:inline-block; width:14px; height:14px; border:2px dashed #f59e0b; background:rgba(251,191,36,.12);"></span> Área total
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="display:inline-block; width:14px; height:14px; border:2px solid #3b7a48; background:rgba(107,179,119,.35);"></span> Área sembrada
+                    </div>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+
         this.state.map = map;
     },
 
@@ -337,6 +371,24 @@ const FincasModule = {
                                 <button type="button" class="btn btn-sm btn-ghost" onclick="FincasModule._newCloneFromForm()"><i class="fa-solid fa-circle-plus"></i> Nuevo clon</button>
                             </div>
                         </div>
+                        <div class="form-group full">
+                            <label>Polígonos del terreno (área total y área sembrada)</label>
+                            <div class="poly-summary" id="polySummary">
+                                <div class="poly-summary-item">
+                                    <i class="fa-solid fa-draw-polygon" style="color:#f59e0b;"></i>
+                                    <span>Área total: <strong id="sumAreaTotal">— ha</strong></span>
+                                    <small id="sumPtsTotal" class="text-muted">0 puntos</small>
+                                </div>
+                                <div class="poly-summary-item">
+                                    <i class="fa-solid fa-seedling" style="color:#3b7a48;"></i>
+                                    <span>Área sembrada: <strong id="sumAreaSembrada">— ha</strong></span>
+                                    <small id="sumPtsSembrada" class="text-muted">0 puntos</small>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="FincasModule.openPolygonEditor()">
+                                    <i class="fa-solid fa-map"></i> Editar polígonos en mapa
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             `,
@@ -348,6 +400,22 @@ const FincasModule = {
 
         // Guardar selección inicial en estado del form
         this._formChips = [...selectedClones];
+        this._formPolyTotal = finca.poligonoTotal ? finca.poligonoTotal.map(p => [...p]) : [];
+        this._formPolySembrado = finca.poligonoSembrado ? finca.poligonoSembrado.map(p => [...p]) : [];
+        this._updatePolySummary();
+    },
+
+    _updatePolySummary() {
+        const at = Helpers.polygonAreaHa(this._formPolyTotal);
+        const as = Helpers.polygonAreaHa(this._formPolySembrado);
+        const elT = document.getElementById('sumAreaTotal');
+        const elS = document.getElementById('sumAreaSembrada');
+        const ptT = document.getElementById('sumPtsTotal');
+        const ptS = document.getElementById('sumPtsSembrada');
+        if (elT) elT.textContent = (at > 0 ? at.toFixed(2) : '—') + ' ha';
+        if (elS) elS.textContent = (as > 0 ? as.toFixed(2) : '—') + ' ha';
+        if (ptT) ptT.textContent = `${this._formPolyTotal.length} puntos`;
+        if (ptS) ptS.textContent = `${this._formPolySembrado.length} puntos`;
     },
 
     _addChip() {
@@ -387,6 +455,269 @@ const FincasModule = {
         UI.toast('Clon agregado', 'success');
     },
 
+    // ============== EDITOR DE POLÍGONOS ==============
+    _poly: { mode: 'total', map: null, layerTotal: null, layerSembrado: null, markers: [] },
+
+    openPolygonEditor() {
+        const form = document.getElementById('fincaForm');
+        if (!form) return;
+
+        // Snapshot completo del estado del form para restaurar al volver
+        const snap = {};
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) snap[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+        });
+        this._savedFormState = snap;
+
+        const lat = parseFloat(snap.lat) || 7.0292;
+        const lng = parseFloat(snap.lng) || -71.4475;
+        const nombre = snap.nombre || 'Finca';
+
+        this._poly._draftTotal = this._formPolyTotal.map(p => [...p]);
+        this._poly._draftSembrado = this._formPolySembrado.map(p => [...p]);
+        this._poly.mode = 'total';
+        this._poly.centerLat = lat;
+        this._poly.centerLng = lng;
+
+        // Cerramos modal de finca y abrimos el de polígonos (mantenemos estado en memoria)
+        UI.openModal({
+            title: `Polígonos del terreno · ${Helpers.escapeHtml(nombre)}`,
+            size: 'lg',
+            body: `
+                <div class="poly-editor">
+                    <div class="poly-toolbar">
+                        <div class="poly-mode-tabs">
+                            <button type="button" class="poly-mode-btn active" data-mode="total" onclick="FincasModule._polySetMode('total')">
+                                <span class="poly-dot" style="background:#f59e0b;"></span> Área TOTAL de la finca
+                            </button>
+                            <button type="button" class="poly-mode-btn" data-mode="sembrado" onclick="FincasModule._polySetMode('sembrado')">
+                                <span class="poly-dot" style="background:#3b7a48;"></span> Área SEMBRADA en cacao
+                            </button>
+                        </div>
+                        <div class="poly-tools">
+                            <button type="button" class="btn btn-sm btn-outline" onclick="FincasModule._polyUndo()" title="Deshacer último punto"><i class="fa-solid fa-rotate-left"></i> Deshacer</button>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="FincasModule._polyClear()" title="Vaciar polígono actual"><i class="fa-solid fa-eraser"></i> Vaciar</button>
+                            <button type="button" class="btn btn-sm btn-outline" onclick="FincasModule._polyCenterMap()" title="Centrar mapa en finca"><i class="fa-solid fa-crosshairs"></i> Centrar</button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" style="margin:10px 0;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Modo dibujo:</strong> haz click sobre el mapa para añadir puntos al polígono activo. También puedes pegar coordenadas abajo en formato <code>lat, lng</code> (una por línea).
+                        </div>
+                    </div>
+
+                    <div class="poly-grid">
+                        <div id="polyEditMap" class="map-container" style="height:420px;"></div>
+                        <div class="poly-side">
+                            <div class="poly-stats">
+                                <div class="poly-stat">
+                                    <span class="poly-stat-label">Área total</span>
+                                    <span class="poly-stat-value" id="polyAreaTotal">— ha</span>
+                                </div>
+                                <div class="poly-stat">
+                                    <span class="poly-stat-label">Área sembrada</span>
+                                    <span class="poly-stat-value" id="polyAreaSembrada">— ha</span>
+                                </div>
+                                <div class="poly-stat">
+                                    <span class="poly-stat-label">% de uso</span>
+                                    <span class="poly-stat-value" id="polyAreaPct">— %</span>
+                                </div>
+                            </div>
+                            <label style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-top:8px; display:block;">
+                                Coordenadas del polígono <span id="polyModeLabel">(área TOTAL)</span>
+                            </label>
+                            <textarea id="polyCoords" rows="9" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; font-family:monospace; font-size:11px;" placeholder="7.0421, -71.4321&#10;7.0425, -71.4310&#10;7.0410, -71.4308"></textarea>
+                            <div class="flex-row" style="margin-top:6px;">
+                                <button type="button" class="btn btn-sm btn-outline" onclick="FincasModule._polyParseCoords()"><i class="fa-solid fa-cloud-arrow-up"></i> Cargar coordenadas</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            footer: `
+                <button class="btn btn-ghost" onclick="FincasModule._polyCancel()">Cancelar</button>
+                <button class="btn btn-primary" onclick="FincasModule._polyApply()"><i class="fa-solid fa-check"></i> Aplicar polígonos</button>
+            `
+        });
+
+        setTimeout(() => this._polyInitMap(), 80);
+    },
+
+    _polyInitMap() {
+        if (this._poly.map) { try { this._poly.map.remove(); } catch (e) {} this._poly.map = null; }
+        const map = L.map('polyEditMap').setView([this._poly.centerLat, this._poly.centerLng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 20 }).addTo(map);
+        // Capa satelital opcional
+        const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery © Esri', maxZoom: 19 });
+        L.control.layers({ 'Calles': map.eachLayer(l => l), 'Satélite': sat }, null, { position: 'topright' }).addTo(map);
+
+        // Marcador del centro de finca
+        L.circleMarker([this._poly.centerLat, this._poly.centerLng], {
+            radius: 7, color: '#dc2626', fillColor: '#fff', fillOpacity: 1, weight: 3
+        }).addTo(map).bindTooltip('Centro de la finca', { permanent: false });
+
+        map.on('click', (e) => {
+            this._polyAddPoint(e.latlng.lat, e.latlng.lng);
+        });
+
+        this._poly.map = map;
+        this._polyRedraw();
+        this._polyUpdateTextarea();
+    },
+
+    _polySetMode(mode) {
+        this._poly.mode = mode;
+        document.querySelectorAll('.poly-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        document.getElementById('polyModeLabel').textContent = mode === 'total' ? '(área TOTAL)' : '(área SEMBRADA)';
+        this._polyRedraw();
+        this._polyUpdateTextarea();
+    },
+
+    _polyAddPoint(lat, lng) {
+        const arr = this._poly.mode === 'total' ? this._poly._draftTotal : this._poly._draftSembrado;
+        arr.push([+lat.toFixed(6), +lng.toFixed(6)]);
+        this._polyRedraw();
+        this._polyUpdateTextarea();
+    },
+
+    _polyUndo() {
+        const arr = this._poly.mode === 'total' ? this._poly._draftTotal : this._poly._draftSembrado;
+        arr.pop();
+        this._polyRedraw();
+        this._polyUpdateTextarea();
+    },
+
+    _polyClear() {
+        if (this._poly.mode === 'total') this._poly._draftTotal = [];
+        else this._poly._draftSembrado = [];
+        this._polyRedraw();
+        this._polyUpdateTextarea();
+    },
+
+    _polyCenterMap() {
+        if (!this._poly.map) return;
+        const arr = this._poly.mode === 'total' ? this._poly._draftTotal : this._poly._draftSembrado;
+        if (arr.length >= 2) {
+            this._poly.map.fitBounds(arr, { padding: [40, 40] });
+        } else {
+            this._poly.map.setView([this._poly.centerLat, this._poly.centerLng], 16);
+        }
+    },
+
+    _polyParseCoords() {
+        const ta = document.getElementById('polyCoords');
+        const lines = ta.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const points = [];
+        for (const line of lines) {
+            const m = line.match(/(-?\d+(?:\.\d+)?)[\s,;]+(-?\d+(?:\.\d+)?)/);
+            if (m) {
+                const lat = parseFloat(m[1]);
+                const lng = parseFloat(m[2]);
+                if (!isNaN(lat) && !isNaN(lng)) points.push([lat, lng]);
+            }
+        }
+        if (!points.length) { UI.toast('No se reconocieron coordenadas válidas', 'warning'); return; }
+        if (this._poly.mode === 'total') this._poly._draftTotal = points;
+        else this._poly._draftSembrado = points;
+        this._polyRedraw();
+        UI.toast(`${points.length} coordenadas cargadas`, 'success');
+    },
+
+    _polyRedraw() {
+        const map = this._poly.map;
+        if (!map) return;
+        // Limpiar capas previas
+        if (this._poly.layerTotal) { map.removeLayer(this._poly.layerTotal); this._poly.layerTotal = null; }
+        if (this._poly.layerSembrado) { map.removeLayer(this._poly.layerSembrado); this._poly.layerSembrado = null; }
+        this._poly.markers.forEach(m => map.removeLayer(m));
+        this._poly.markers = [];
+
+        // Polígono total (amarillo discontinuo)
+        if (this._poly._draftTotal.length >= 2) {
+            this._poly.layerTotal = L.polygon(this._poly._draftTotal, {
+                color: '#f59e0b', weight: 3, dashArray: '8,6', fillColor: '#fbbf24', fillOpacity: 0.10
+            }).addTo(map);
+        }
+        // Polígono sembrado (verde sólido)
+        if (this._poly._draftSembrado.length >= 2) {
+            this._poly.layerSembrado = L.polygon(this._poly._draftSembrado, {
+                color: '#3b7a48', weight: 3, fillColor: '#6bb377', fillOpacity: 0.35
+            }).addTo(map);
+        }
+
+        // Marcadores de puntos del modo activo
+        const arr = this._poly.mode === 'total' ? this._poly._draftTotal : this._poly._draftSembrado;
+        const col = this._poly.mode === 'total' ? '#f59e0b' : '#3b7a48';
+        arr.forEach((p, i) => {
+            const mk = L.circleMarker(p, { radius: 6, color: col, fillColor: 'white', fillOpacity: 1, weight: 2 })
+                .addTo(map).bindTooltip(`${i + 1}`, { permanent: true, direction: 'top', offset: [0, -6], className: 'poly-tip' });
+            this._poly.markers.push(mk);
+        });
+
+        // Actualizar stats
+        const at = Helpers.polygonAreaHa(this._poly._draftTotal);
+        const as = Helpers.polygonAreaHa(this._poly._draftSembrado);
+        const pct = at > 0 ? (as / at) * 100 : 0;
+        document.getElementById('polyAreaTotal').textContent = (at > 0 ? at.toFixed(2) : '—') + ' ha';
+        document.getElementById('polyAreaSembrada').textContent = (as > 0 ? as.toFixed(2) : '—') + ' ha';
+        document.getElementById('polyAreaPct').textContent = (pct > 0 ? pct.toFixed(1) : '—') + ' %';
+    },
+
+    _polyUpdateTextarea() {
+        const ta = document.getElementById('polyCoords');
+        if (!ta) return;
+        const arr = this._poly.mode === 'total' ? this._poly._draftTotal : this._poly._draftSembrado;
+        ta.value = arr.map(p => p[0].toFixed(6) + ', ' + p[1].toFixed(6)).join('\n');
+    },
+
+    _polyApply() {
+        // Validación: polígono debe tener al menos 3 puntos o estar vacío
+        if (this._poly._draftTotal.length > 0 && this._poly._draftTotal.length < 3) {
+            UI.toast('El área total debe tener al menos 3 puntos o estar vacía', 'warning');
+            return;
+        }
+        if (this._poly._draftSembrado.length > 0 && this._poly._draftSembrado.length < 3) {
+            UI.toast('El área sembrada debe tener al menos 3 puntos o estar vacía', 'warning');
+            return;
+        }
+        this._formPolyTotal = this._poly._draftTotal.map(p => [...p]);
+        this._formPolySembrado = this._poly._draftSembrado.map(p => [...p]);
+        if (this._poly.map) { try { this._poly.map.remove(); } catch (e) {} this._poly.map = null; }
+        UI.closeModal();
+        // Reabrir el form de finca con los polígonos actualizados
+        setTimeout(() => this._reopenFincaForm(), 50);
+    },
+
+    _polyCancel() {
+        if (this._poly.map) { try { this._poly.map.remove(); } catch (e) {} this._poly.map = null; }
+        UI.closeModal();
+        setTimeout(() => this._reopenFincaForm(), 50);
+    },
+
+    _reopenFincaForm() {
+        const formState = this._savedFormState || {};
+        const chips = [...this._formChips];
+        const polyTotal = this._formPolyTotal.map(p => [...p]);
+        const polySembrado = this._formPolySembrado.map(p => [...p]);
+
+        this.openForm(formState.id || null);
+        // openForm restablece polígonos/chips desde storage; sobreescribimos con los valores del editor
+        this._formChips = chips.length ? chips : this._formChips;
+        this._formPolyTotal = polyTotal;
+        this._formPolySembrado = polySembrado;
+
+        setTimeout(() => {
+            Object.entries(formState).forEach(([k, v]) => {
+                const el = document.querySelector(`#fincaForm [name="${k}"]`);
+                if (el && v !== undefined && v !== null && el.type !== 'hidden') el.value = v;
+            });
+            this._renderChips();
+            this._updatePolySummary();
+        }, 80);
+    },
+
     save() {
         const form = document.getElementById('fincaForm');
         const data = UI.serializeForm(form);
@@ -413,7 +744,9 @@ const FincasModule = {
             telefono: data.telefono || '',
             areaSembrada: parseFloat(data.areaSembrada) || 0,
             hectareasProductivas: parseFloat(data.hectareasProductivas) || 0,
-            clones: [...this._formChips]
+            clones: [...this._formChips],
+            poligonoTotal: (this._formPolyTotal || []).map(p => [...p]),
+            poligonoSembrado: (this._formPolySembrado || []).map(p => [...p])
         };
 
         if (data.id) {
@@ -448,6 +781,13 @@ const FincasModule = {
                         <h4 style="margin-top:16px; margin-bottom:8px; color:var(--cacao-700);"><i class="fa-solid fa-ruler-combined"></i> Áreas</h4>
                         <p>Sembrada: <strong>${f.areaSembrada} ha</strong><br>
                         Productiva: <strong>${f.hectareasProductivas} ha</strong></p>
+                        ${(f.poligonoTotal?.length || f.poligonoSembrado?.length) ? `
+                            <h4 style="margin-top:16px; margin-bottom:8px; color:var(--cacao-700);"><i class="fa-solid fa-draw-polygon"></i> Polígonos del terreno</h4>
+                            <p>
+                                <span class="status-dot yellow"></span> Área total: <strong>${f.poligonoTotal?.length >= 3 ? Helpers.polygonAreaHa(f.poligonoTotal).toFixed(2) + ' ha' : '—'}</strong><br>
+                                <span class="status-dot green"></span> Área sembrada: <strong>${f.poligonoSembrado?.length >= 3 ? Helpers.polygonAreaHa(f.poligonoSembrado).toFixed(2) + ' ha' : '—'}</strong>
+                            </p>
+                        ` : ''}
 
                         <h4 style="margin-top:16px; margin-bottom:8px; color:var(--cacao-700);"><i class="fa-solid fa-dna"></i> Clones</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:6px;">
@@ -466,9 +806,24 @@ const FincasModule = {
             `
         });
         setTimeout(() => {
-            const map = L.map('fincaDetailMap').setView([f.lat, f.lng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+            const map = L.map('fincaDetailMap').setView([f.lat, f.lng], 15);
+            const calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+            const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery © Esri', maxZoom: 19 });
+            L.control.layers({ 'Calles': calles, 'Satélite': sat }).addTo(map);
+
+            let allBounds = [[f.lat, f.lng]];
+            if (f.poligonoTotal && f.poligonoTotal.length >= 3) {
+                const poly = L.polygon(f.poligonoTotal, { color: '#f59e0b', weight: 3, dashArray: '8,6', fillColor: '#fbbf24', fillOpacity: 0.10 }).addTo(map);
+                poly.bindTooltip(`Área total: ${Helpers.polygonAreaHa(f.poligonoTotal).toFixed(2)} ha`);
+                allBounds = allBounds.concat(f.poligonoTotal);
+            }
+            if (f.poligonoSembrado && f.poligonoSembrado.length >= 3) {
+                const poly = L.polygon(f.poligonoSembrado, { color: '#3b7a48', weight: 3, fillColor: '#6bb377', fillOpacity: 0.35 }).addTo(map);
+                poly.bindTooltip(`Área sembrada: ${Helpers.polygonAreaHa(f.poligonoSembrado).toFixed(2)} ha`);
+                allBounds = allBounds.concat(f.poligonoSembrado);
+            }
             L.marker([f.lat, f.lng]).addTo(map).bindPopup(f.nombre).openPopup();
+            if (allBounds.length > 1) map.fitBounds(allBounds, { padding: [20, 20] });
         }, 120);
     },
 

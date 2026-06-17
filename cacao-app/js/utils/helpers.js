@@ -57,6 +57,33 @@ const Helpers = {
         return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     },
 
+    // Área de un polígono [[lat,lng],...] en hectáreas (proyección equirectangular - precisa a escala de finca)
+    polygonAreaHa(coords) {
+        if (!coords || coords.length < 3) return 0;
+        const R = 6378137; // radio terrestre en metros
+        const meanLat = coords.reduce((a, c) => a + c[0], 0) / coords.length;
+        const cosLat = Math.cos(meanLat * Math.PI / 180);
+        const pts = coords.map(([lat, lng]) => [
+            (lng * Math.PI / 180) * R * cosLat,
+            (lat * Math.PI / 180) * R
+        ]);
+        let area = 0;
+        for (let i = 0; i < pts.length; i++) {
+            const j = (i + 1) % pts.length;
+            area += pts[i][0] * pts[j][1];
+            area -= pts[j][0] * pts[i][1];
+        }
+        return Math.abs(area) / 2 / 10000; // m² → ha
+    },
+
+    // Centroide del polígono
+    polygonCenter(coords) {
+        if (!coords || !coords.length) return null;
+        const lat = coords.reduce((a, c) => a + c[0], 0) / coords.length;
+        const lng = coords.reduce((a, c) => a + c[1], 0) / coords.length;
+        return [lat, lng];
+    },
+
     // Nearest neighbor TSP heurística (suficiente local)
     optimizeRoute(start, points) {
         const remaining = points.slice();
